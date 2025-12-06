@@ -1,0 +1,23 @@
+<Project>
+  <!-- MSBuild targets for .tui file compilation -->
+
+  <PropertyGroup>
+    <!-- Enable Razor compilation for .tui files -->
+    <RazorLangVersion>8.0</RazorLangVersion>
+  </PropertyGroup>
+
+  <!-- Include .tui files as Razor components -->
+  <ItemGroup>
+    <TuiComponent Include="**/*.tui" />
+    <RazorComponent Include="@(TuiComponent)" />
+  </ItemGroup>
+
+  <!-- Configure Razor generation for .tui files -->
+  <ItemGroup>
+    <RazorConfiguration Include="Tui">
+      <Extensions>Rndr.Razor.TuiRazorExtension</Extensions>
+    </RazorConfiguration>
+  </ItemGroup>
+
+</Project>
+

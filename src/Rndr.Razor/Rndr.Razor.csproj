@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Rndr.Razor</RootNamespace>
+    <AssemblyName>Rndr.Razor</AssemblyName>
+    <PackageId>Rndr.Razor</PackageId>
+    <PackageDescription>Razor integration for Rndr TUI framework - enables .tui single-file components</PackageDescription>
+    <PackageTags>tui;terminal;console;ui;razor;components</PackageTags>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Rndr\Rndr.csproj" />
+  </ItemGroup>
+
+</Project>
+

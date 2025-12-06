@@ -1,0 +1,272 @@
+using Rndr.Layout;
+
+namespace Rndr.Rendering;
+
+/// <summary>
+/// Renders layout trees to the console using ANSI escape sequences.
+/// </summary>
+public sealed class ConsoleRenderer : ITuiRenderer
+{
+    private readonly IConsoleAdapter _console;
+    private readonly RndrTheme _theme;
+    private int _currentRow;
+    private int _buttonIndex;
+    private int _focusedButtonIndex;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ConsoleRenderer"/> class.
+    /// </summary>
+    /// <param name="console">The console adapter to use for output.</param>
+    /// <param name="theme">The theme to use for rendering.</param>
+    public ConsoleRenderer(IConsoleAdapter console, RndrTheme theme)
+    {
+        _console = console;
+        _theme = theme;
+    }
+
+    /// <inheritdoc />
+    public void Render(IReadOnlyList<Node> rootNodes, int focusedButtonIndex = -1)
+    {
+        _currentRow = 0;
+        _buttonIndex = 0;
+        _focusedButtonIndex = focusedButtonIndex;
+
+        _console.HideCursor();
+        _console.Clear();
+
+        foreach (var node in rootNodes)
+        {
+            RenderNode(node, 0, _console.WindowWidth);
+        }
+
+        _console.Flush();
+    }
+
+    private void RenderNode(Node node, int leftOffset, int availableWidth)
+    {
+        switch (node.Kind)
+        {
+            case NodeKind.Column:
+                RenderColumn(node, leftOffset, availableWidth);
+                break;
+            case NodeKind.Row:
+                RenderRow(node, leftOffset, availableWidth);
+                break;
+            case NodeKind.Panel:
+                RenderPanel((PanelNode)node, leftOffset, availableWidth);
+                break;
+            case NodeKind.Text:
+                RenderText((TextNode)node, leftOffset, availableWidth);
+                break;
+            case NodeKind.Button:
+                RenderButton((ButtonNode)node, leftOffset);
+                break;
+            case NodeKind.Spacer:
+                RenderSpacer((SpacerNode)node);
+                break;
+            case NodeKind.Centered:
+                RenderCentered(node, leftOffset, availableWidth);
+                break;
+            case NodeKind.TextInput:
+                RenderTextInput((TextInputNode)node, leftOffset, availableWidth);
+                break;
+        }
+    }
+
+    private void RenderColumn(Node node, int leftOffset, int availableWidth)
+    {
+        var padding = node.Style.Padding ?? 0;
+        var gap = node.Style.Gap ?? 0;
+        var innerOffset = leftOffset + padding;
+        var innerWidth = availableWidth - (padding * 2);
+
+        _currentRow += padding;
+
+        for (var i = 0; i < node.Children.Count; i++)
+        {
+            if (i > 0)
+            {
+                _currentRow += gap;
+            }
+            RenderNode(node.Children[i], innerOffset, innerWidth);
+        }
+
+        _currentRow += padding;
+    }
+
+    private void RenderRow(Node node, int leftOffset, int availableWidth)
+    {
+        var gap = node.Style.Gap ?? 1;
+        var childCount = node.Children.Count;
+
+        if (childCount == 0)
+        {
+            return;
+        }
+
+        // Calculate space for each child (simple equal distribution)
+        var spacerCount = node.Children.Count(c => c.Kind == NodeKind.Spacer);
+        var nonSpacerCount = childCount - spacerCount;
+        var totalGap = (childCount - 1) * gap;
+
+        // Estimate widths for non-spacer items
+        var buttonWidths = node.Children
+            .Where(c => c.Kind == NodeKind.Button)
+            .Cast<ButtonNode>()
+            .Sum(b => (b.Label.Length + 4)); // [ label ]
+
+        var textWidths = node.Children
+            .Where(c => c.Kind == NodeKind.Text)
+            .Cast<TextNode>()
+            .Sum(t => t.Content.Length);
+
+        var fixedWidth = buttonWidths + textWidths + totalGap;
+        var remainingWidth = availableWidth - fixedWidth;
+        var spacerWidth = spacerCount > 0 ? remainingWidth / spacerCount : 0;
+
+        var currentLeft = leftOffset;
+        var startRow = _currentRow;
+
+        foreach (var child in node.Children)
+        {
+            _currentRow = startRow; // Reset row for each horizontal element
+
+            int childWidth;
+            if (child.Kind == NodeKind.Spacer)
+            {
+                childWidth = spacerWidth;
+                currentLeft += childWidth;
+            }
+            else if (child.Kind == NodeKind.Button)
+            {
+                childWidth = ((ButtonNode)child).Label.Length + 4;
+                RenderNode(child, currentLeft, childWidth);
+                currentLeft += childWidth + gap;
+            }
+            else if (child.Kind == NodeKind.Text)
+            {
+                childWidth = ((TextNode)child).Content.Length;
+                RenderNode(child, currentLeft, childWidth);
+                currentLeft += childWidth + gap;
+            }
+            else
+            {
+                childWidth = availableWidth / nonSpacerCount;
+                RenderNode(child, currentLeft, childWidth);
+                currentLeft += childWidth + gap;
+            }
+        }
+
+        _currentRow = startRow + 1;
+    }
+
+    private void RenderPanel(PanelNode node, int leftOffset, int availableWidth)
+    {
+        var borderChars = _theme.Panel.BorderStyle == BorderStyle.Rounded
+            ? ("╭", "╮", "╰", "╯", "─", "│")
+            : ("┌", "┐", "└", "┘", "─", "│");
+
+        var (topLeft, topRight, bottomLeft, bottomRight, horizontal, vertical) = borderChars;
+
+        // Top border with title
+        var title = node.Title ?? "";
+        var titleDisplay = string.IsNullOrEmpty(title) ? "" : $" {title} ";
+        var topBorderLength = availableWidth - 2 - titleDisplay.Length;
+        var topBorder = topLeft + titleDisplay + new string(horizontal[0], Math.Max(0, topBorderLength)) + topRight;
+
+        _console.WriteAt(leftOffset, _currentRow, topBorder, _theme.TextColor);
+        _currentRow++;
+
+        // Store starting row for content
+        var contentStartRow = _currentRow;
+
+        // Render children
+        foreach (var child in node.Children)
+        {
+            RenderNode(child, leftOffset + 2, availableWidth - 4);
+        }
+
+        // Add vertical borders for each content row
+        var contentEndRow = _currentRow;
+        for (var row = contentStartRow; row < contentEndRow; row++)
+        {
+            _console.WriteAt(leftOffset, row, vertical, _theme.TextColor);
+            _console.WriteAt(leftOffset + availableWidth - 1, row, vertical, _theme.TextColor);
+        }
+
+        // Bottom border
+        var bottomBorder = bottomLeft + new string(horizontal[0], availableWidth - 2) + bottomRight;
+        _console.WriteAt(leftOffset, _currentRow, bottomBorder, _theme.TextColor);
+        _currentRow++;
+    }
+
+    private void RenderText(TextNode node, int leftOffset, int availableWidth)
+    {
+        var color = node.Style.Accent ? _theme.AccentColor :
+                    node.Style.Faint ? _theme.MutedTextColor :
+                    _theme.TextColor;
+
+        var content = node.Content;
+
+        // Handle alignment
+        if (node.Style.Align == TextAlign.Center)
+        {
+            var padding = Math.Max(0, (availableWidth - content.Length) / 2);
+            leftOffset += padding;
+        }
+        else if (node.Style.Align == TextAlign.Right)
+        {
+            var padding = Math.Max(0, availableWidth - content.Length);
+            leftOffset += padding;
+        }
+
+        // Apply bold via ANSI if supported
+        if (node.Style.Bold)
+        {
+            content = $"\x1b[1m{content}\x1b[22m";
+        }
+
+        _console.WriteAt(leftOffset, _currentRow, content, color);
+        _currentRow++;
+    }
+
+    private void RenderButton(ButtonNode node, int leftOffset)
+    {
+        var isFocused = _buttonIndex == _focusedButtonIndex;
+        var label = node.Label;
+
+        var displayText = isFocused ? $"[ {label} ]" : $"  {label}  ";
+        var color = node.IsPrimary || isFocused ? _theme.AccentColor : _theme.TextColor;
+
+        _console.WriteAt(leftOffset, _currentRow, displayText, color);
+        _currentRow++;
+        _buttonIndex++;
+    }
+
+    private void RenderSpacer(SpacerNode node)
+    {
+        _currentRow += node.Weight;
+    }
+
+    private void RenderCentered(Node node, int leftOffset, int availableWidth)
+    {
+        // For centering, we need to calculate the content width first
+        // For simplicity, just add some left offset
+        var centerOffset = availableWidth / 4;
+        foreach (var child in node.Children)
+        {
+            RenderNode(child, leftOffset + centerOffset, availableWidth - (centerOffset * 2));
+        }
+    }
+
+    private void RenderTextInput(TextInputNode node, int leftOffset, int availableWidth)
+    {
+        var displayValue = string.IsNullOrEmpty(node.Value) ? node.Placeholder ?? "" : node.Value;
+        var color = string.IsNullOrEmpty(node.Value) ? _theme.MutedTextColor : _theme.TextColor;
+
+        var inputDisplay = $"[{displayValue.PadRight(Math.Max(10, availableWidth - 4))}]";
+        _console.WriteAt(leftOffset, _currentRow, inputDisplay, color);
+        _currentRow++;
+    }
+}
+
