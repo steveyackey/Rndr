@@ -15,9 +15,9 @@ builder.Services.AddRndrTheme(theme =>
 // Build the app
 var app = builder.Build();
 
-// Map views
-app.MapView("/", typeof(HomeComponent));
-app.MapView("/log", typeof(LogComponent));
+// Map views - use generated .tui components
+app.MapView("/", typeof(Home));
+app.MapView("/log", typeof(Log));
 
 // Register global key handlers
 app.OnGlobalKey((key, ctx) =>
