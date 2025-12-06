@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Rndr</RootNamespace>
+    <AssemblyName>Rndr</AssemblyName>
+    <PackageId>Rndr</PackageId>
+    <PackageDescription>A TUI framework for .NET combining ASP.NET Minimal API patterns with Vue-like single-file components</PackageDescription>
+    <PackageTags>tui;terminal;console;ui;framework</PackageTags>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Rndr.Testing" />
+    <InternalsVisibleTo Include="Rndr.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>
+

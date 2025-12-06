@@ -1,0 +1,19 @@
+<Project>
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>12.0</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest</AnalysisLevel>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>Rndr Contributors</Authors>
+    <Product>Rndr</Product>
+    <Description>A TUI framework for .NET combining ASP.NET Minimal API patterns with Vue-like single-file components</Description>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+</Project>
+

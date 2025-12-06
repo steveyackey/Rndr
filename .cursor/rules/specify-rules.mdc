@@ -1,0 +1,29 @@
+# Rndr Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2025-12-06
+
+## Active Technologies
+
+- C# 12+ / .NET 8 (designed for .NET 10 future-proofing) + Microsoft.Extensions.Hosting, Microsoft.Extensions.DependencyInjection, Microsoft.Extensions.Logging, Microsoft.Extensions.Options (001-rndr-tui-framework)
+
+## Project Structure
+
+```text
+src/
+tests/
+```
+
+## Commands
+
+# Add commands for C# 12+ / .NET 8 (designed for .NET 10 future-proofing)
+
+## Code Style
+
+C# 12+ / .NET 8 (designed for .NET 10 future-proofing): Follow standard conventions
+
+## Recent Changes
+
+- 001-rndr-tui-framework: Added C# 12+ / .NET 8 (designed for .NET 10 future-proofing) + Microsoft.Extensions.Hosting, Microsoft.Extensions.DependencyInjection, Microsoft.Extensions.Logging, Microsoft.Extensions.Options
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->

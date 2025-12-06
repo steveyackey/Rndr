@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Rndr.Testing</RootNamespace>
+    <AssemblyName>Rndr.Testing</AssemblyName>
+    <PackageId>Rndr.Testing</PackageId>
+    <PackageDescription>Testing helpers for Rndr TUI framework - enables component testing without a terminal</PackageDescription>
+    <PackageTags>tui;terminal;console;ui;testing</PackageTags>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Rndr\Rndr.csproj" />
+  </ItemGroup>
+
+</Project>
+

@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Rndr.Samples.MyFocusTui</RootNamespace>
+    <AssemblyName>MyFocusTui</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Rndr\Rndr.csproj" />
+    <ProjectReference Include="..\Rndr.Razor\Rndr.Razor.csproj" />
+  </ItemGroup>
+
+</Project>
+
