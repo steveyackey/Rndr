@@ -5,12 +5,22 @@
     <RootNamespace>Rndr.Samples.MyFocusTui</RootNamespace>
     <AssemblyName>MyFocusTui</AssemblyName>
     <IsPackable>false</IsPackable>
+    <!-- Save generated sources for inspection -->
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)Generated</CompilerGeneratedFilesOutputPath>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Rndr\Rndr.csproj" />
-    <ProjectReference Include="..\Rndr.Razor\Rndr.Razor.csproj" />
+    <!-- Reference as analyzer for source generator -->
+    <ProjectReference Include="..\Rndr.Razor\Rndr.Razor.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!-- Include .tui files as AdditionalFiles for source generator -->
+  <ItemGroup>
+    <AdditionalFiles Include="**/*.tui" />
   </ItemGroup>
 
 </Project>
-

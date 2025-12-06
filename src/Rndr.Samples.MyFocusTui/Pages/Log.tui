@@ -1,0 +1,57 @@
+@view
+@using Rndr.Samples.MyFocusTui.Models
+
+<Column Padding="1" Gap="1">
+    <Text Bold="true" Accent="true">📋 Activity Log</Text>
+
+    <Panel Title="All Activity">
+        <Column Padding="1">
+            @if (state.Value.Log.Count == 0)
+            {
+                <Text Faint="true">No activity recorded yet.</Text>
+                <Text Faint="true">Start a focus session from the home screen.</Text>
+            }
+            else
+            {
+                @foreach (var entry in GetAllEntries())
+                {
+                    <Text>@FormatEntry(entry)</Text>
+                }
+            }
+        </Column>
+    </Panel>
+
+    <Spacer />
+    <Row Gap="2">
+        <Button OnClick="@GoBack">← Back to Home</Button>
+        <Button OnClick="@ClearAll">Clear All</Button>
+    </Row>
+
+    <Text Faint="true">[Q] Quit  [H] Home  [Tab] Navigate</Text>
+</Column>
+
+@code {
+    private Signal<FocusState> state = default!;
+
+    protected override void OnInit()
+    {
+        state = StateGlobal("focus", new FocusState());
+    }
+
+    void GoBack()
+    {
+        Context.Navigation.Back();
+    }
+
+    void ClearAll()
+    {
+        state.Value.Log.Clear();
+    }
+
+    IEnumerable<ActionEntry> GetAllEntries() =>
+        state.Value.Log.OrderByDescending(e => e.Timestamp);
+
+    string FormatEntry(ActionEntry entry) =>
+        $"{entry.Timestamp:yyyy-MM-dd HH:mm:ss} - {entry.Message}";
+}
+

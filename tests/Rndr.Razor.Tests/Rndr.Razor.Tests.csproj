@@ -19,11 +19,17 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <!-- For testing source generators -->
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Rndr.Razor\Rndr.Razor.csproj" />
+    <ProjectReference Include="..\..\src\Rndr\Rndr.csproj" />
+    <ProjectReference Include="..\..\src\Rndr.Testing\Rndr.Testing.csproj" />
+    <!-- Reference generator project directly for testing (not as analyzer) -->
+    <ProjectReference Include="..\..\src\Rndr.Razor\Rndr.Razor.csproj" 
+                      OutputItemType="Analyzer" 
+                      ReferenceOutputAssembly="true" />
   </ItemGroup>
 
 </Project>
-

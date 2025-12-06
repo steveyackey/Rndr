@@ -1,4 +1,7 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Rndr.Diagnostics;
 using Rndr.Input;
@@ -120,8 +123,13 @@ public sealed class DefaultEventLoop : IEventLoop
         // Handle component types vs inline view definitions
         if (viewRegistration.ComponentType != null)
         {
-            // Instantiate the component
-            var component = (TuiComponentBase)Activator.CreateInstance(viewRegistration.ComponentType)!;
+            // Instantiate the component using ActivatorUtilities for constructor injection
+            var component = (TuiComponentBase)ActivatorUtilities.CreateInstance(
+                app.Services, viewRegistration.ComponentType);
+            
+            // Populate @inject properties (property injection for generated components)
+            PopulateInjectProperties(component, app.Services);
+            
             component.AttachContext(viewContext);
             component.Build(layout);
         }
@@ -220,6 +228,50 @@ public sealed class DefaultEventLoop : IEventLoop
         {
             CollectButtonsRecursive(child, buttons);
         }
+    }
+
+    /// <summary>
+    /// Populates @inject properties on a component with services from DI.
+    /// Generated .tui components use public settable properties for dependency injection.
+    /// </summary>
+    [UnconditionalSuppressMessage("AOT", "IL2072:Target parameter argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method",
+        Justification = "Property injection for DI is inherently reflection-based. Component types are preserved via MapView annotations.")]
+    [UnconditionalSuppressMessage("AOT", "IL2075:'this' argument does not satisfy 'DynamicallyAccessedMembersAttribute' in call to target method",
+        Justification = "Component types registered via MapView have PublicProperties preserved.")]
+    private static void PopulateInjectProperties(TuiComponentBase component, IServiceProvider services)
+    {
+        var componentType = component.GetType();
+        
+        foreach (var property in componentType.GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            // Skip read-only properties
+            if (!property.CanWrite || property.GetSetMethod() == null)
+                continue;
+            
+            // Skip properties that already have a value (not default)
+            var currentValue = property.GetValue(component);
+            if (currentValue != null && !IsDefaultValue(currentValue, property.PropertyType))
+                continue;
+            
+            // Try to resolve the service from DI
+            var service = services.GetService(property.PropertyType);
+            if (service != null)
+            {
+                property.SetValue(component, service);
+            }
+        }
+    }
+
+    private static bool IsDefaultValue(
+        object value, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)] Type type)
+    {
+        if (type.IsValueType)
+        {
+            var defaultValue = Activator.CreateInstance(type);
+            return Equals(value, defaultValue);
+        }
+        return value == null;
     }
 }
 

@@ -1,18 +1,40 @@
-<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
     <OutputType>Library</OutputType>
     <RootNamespace>Rndr.Razor</RootNamespace>
     <AssemblyName>Rndr.Razor</AssemblyName>
     <PackageId>Rndr.Razor</PackageId>
     <PackageDescription>Razor integration for Rndr TUI framework - enables .tui single-file components</PackageDescription>
-    <PackageTags>tui;terminal;console;ui;razor;components</PackageTags>
+    <PackageTags>tui;terminal;console;ui;razor;components;source-generator</PackageTags>
     <IsPackable>true</IsPackable>
+    
+    <!-- Source Generator Configuration -->
+    <EnforceExtendedAnalyzerRules>false</EnforceExtendedAnalyzerRules>
+    <IsRoslynComponent>true</IsRoslynComponent>
+    <!-- Disable analyzer release tracking for simplicity -->
+    <NoWarn>$(NoWarn);RS2008;RS1032</NoWarn>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
   </PropertyGroup>
 
+  <!-- Source Generator Dependencies -->
   <ItemGroup>
-    <ProjectReference Include="..\Rndr\Rndr.csproj" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.8.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.4" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Pack the analyzer/generator as an analyzer -->
+  <ItemGroup>
+    <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+  </ItemGroup>
+
+  <!-- Include build targets for consuming projects -->
+  <ItemGroup>
+    <None Include="build\**\*" Pack="true" PackagePath="build" />
   </ItemGroup>
 
 </Project>
-

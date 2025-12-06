@@ -1,5 +1,7 @@
+using Microsoft.Extensions.DependencyInjection;
 using Rndr;
 using Rndr.Layout;
+using Rndr.Testing;
 using Xunit;
 
 namespace Rndr.Razor.Tests;
@@ -42,6 +44,52 @@ public class TuiComponentGenerationTests
         // Assert
         Assert.NotNull(component);
     }
+    
+    [Fact]
+    public void Component_WithInjectProperty_ReceivesServiceFromDI()
+    {
+        // Arrange - set up DI services
+        var services = new ServiceCollection()
+            .AddSingleton<ITestService, TestService>()
+            .BuildServiceProvider();
+        
+        // Act - build component with DI
+        var (nodes, context) = RndrTestHost.BuildComponent<TestComponentWithInject>(services);
+        
+        // Assert - component was built successfully (service was injected)
+        Assert.NotNull(nodes);
+    }
+    
+    [Fact]
+    public void Component_WithInjectProperty_UsesInjectedService()
+    {
+        // Arrange
+        var testService = new TestService();
+        var services = new ServiceCollection()
+            .AddSingleton<ITestService>(testService)
+            .BuildServiceProvider();
+        
+        // Act
+        var (nodes, context) = RndrTestHost.BuildComponent<TestComponentWithInject>(services);
+        
+        // Assert - the service was used (GetMessage was called)
+        Assert.True(testService.WasCalled);
+    }
+    
+    [Fact]
+    public void BuildComponent_ByType_SupportsPropertyInjection()
+    {
+        // Arrange
+        var services = new ServiceCollection()
+            .AddSingleton<ITestService, TestService>()
+            .BuildServiceProvider();
+        
+        // Act - use the type-based overload
+        var (nodes, context) = RndrTestHost.BuildComponent(typeof(TestComponentWithInject), services);
+        
+        // Assert
+        Assert.NotNull(nodes);
+    }
 
     /// <summary>
     /// Example component that would be generated from a .tui file.
@@ -78,6 +126,48 @@ public class TuiComponentGenerationTests
                         });
                     });
                 });
+            });
+        }
+    }
+    
+    /// <summary>
+    /// Test interface for DI injection testing.
+    /// </summary>
+    public interface ITestService
+    {
+        string GetMessage();
+    }
+    
+    /// <summary>
+    /// Test implementation for DI injection testing.
+    /// </summary>
+    public class TestService : ITestService
+    {
+        public bool WasCalled { get; private set; }
+        
+        public string GetMessage()
+        {
+            WasCalled = true;
+            return "Hello from injected service";
+        }
+    }
+    
+    /// <summary>
+    /// Test component with @inject property (simulates generated .tui component).
+    /// </summary>
+    public class TestComponentWithInject : TuiComponentBase
+    {
+        // This property simulates what gets generated for: @inject ITestService Service
+        public ITestService Service { get; set; } = default!;
+        
+        public override void Build(LayoutBuilder layout)
+        {
+            // Use the injected service
+            var message = Service.GetMessage();
+            
+            layout.Column(col =>
+            {
+                col.Text(message);
             });
         }
     }

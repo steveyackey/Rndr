@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Rndr.Diagnostics;
@@ -72,7 +73,9 @@ public sealed class TuiApp : IAsyncDisposable
     /// <param name="route">The route path.</param>
     /// <param name="viewComponentType">The component type to instantiate.</param>
     /// <returns>This app instance for chaining.</returns>
-    public TuiApp MapView(string route, Type viewComponentType)
+    public TuiApp MapView(
+        string route, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] Type viewComponentType)
     {
         _routes[route] = new ViewRegistration
         {
@@ -242,7 +245,10 @@ internal sealed class ViewRegistration
     public required string Route { get; init; }
     public Action<ViewDefinition>? ViewBuilder { get; init; }
     public Action<ViewContext, LayoutBuilder>? LayoutBuilder { get; init; }
+    
+    [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicProperties)]
     public Type? ComponentType { get; init; }
+    
     public string? Title { get; init; }
     public Func<KeyEvent, ViewContext, bool>? KeyHandler { get; init; }
 }
