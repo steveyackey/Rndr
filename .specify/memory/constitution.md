@@ -1,24 +1,32 @@
 <!--
   SYNC IMPACT REPORT
   ==================
-  Version change: 0.0.0 → 1.0.0 (initial ratification)
+  Version change: 1.0.0 → 2.0.0 (major amendment - Principle II redefined)
   
-  Modified principles: N/A (initial version)
+  Modified principles: 
+    - Principle II: Vue-like Component Model → Razor Component Model
   
-  Added sections:
-    - Core Principles (8 principles)
-    - Technical Constraints
-    - Development Workflow
-    - Governance
+  Rationale for change:
+    - Native IDE tooling support (IntelliSense, syntax highlighting, error detection) without custom LSP development
+    - Blazor ComponentBase designed for async-first patterns, essential for real-world TUI applications
+    - Leverages existing .NET developer knowledge from Blazor web development
+    - Eliminates maintenance burden of custom .tui parser and tooling
   
-  Removed sections: N/A (initial version)
+  Breaking changes:
+    - All .tui files must be migrated to .razor files
+    - Component lifecycle changes from OnInit() to OnInitializedAsync()
+    - Component base class changes from TuiComponentBase to RazorComponentBase (inherits ComponentBase)
+    - Build() method replaced with BuildRenderTree(RenderTreeBuilder)
   
   Templates requiring updates:
-    ✅ plan-template.md - Constitution Check section compatible
-    ✅ spec-template.md - User stories align with phased approach
-    ✅ tasks-template.md - Phase structure matches constitution phases
+    ✅ plan-template.md - Constitution Check section updated to reference Principle II v2.0
+    ✅ spec-template.md - Component model examples updated to Razor patterns
+    ⚠️ Existing specs 001-003 - Reference outdated Principle II, marked as legacy
   
-  Follow-up TODOs: None
+  Follow-up TODOs: 
+    - Update all code samples in documentation from .tui to .razor
+    - Update README.md quick start guide
+    - Archive .tui examples as legacy reference
 -->
 
 # Rndr Constitution
@@ -37,17 +45,26 @@ The public API MUST feel like ASP.NET Minimal APIs at the application level:
 **Rationale**: .NET developers familiar with ASP.NET should feel immediately at home. This reduces
 learning curve and leverages existing ecosystem knowledge.
 
-### II. Vue-like Component Model
+### II. Razor Component Model
 
-View authoring MUST feel like Vue single-file components:
+View authoring MUST use Blazor Razor components with first-class IDE support:
 
-- `.tui` files with declarative XML-like markup (`<Column>`, `<Row>`, `<Panel>`, `<Text>`, `<Button>`)
-- `@code { ... }` blocks for component logic
-- Reactive state via `State("key", initialValue)` returning `Signal<T>`
-- Props passed as XML attributes with Razor expression support (`@variable`)
+- `.razor` files with declarative markup and `@code` blocks
+- Native IDE support (IntelliSense, syntax highlighting, error detection) in VS Code, Visual Studio, Rider
+- Async-first lifecycle methods: `OnInitializedAsync()`, `OnParametersSetAsync()`, `OnAfterRenderAsync()`
+- Component base inherits from `Microsoft.AspNetCore.Components.ComponentBase` with Rndr-specific extensions
+- Reactive state via `Signal<T>` pattern integrated with component lifecycle
+- Razor syntax: `@if`, `@foreach`, `@inject`, parameter binding with `[Parameter]`
+- Semantic terminal layout primitives: `<Column>`, `<Row>`, `<Panel>`, `<Text>`, `<Button>`, `<Spacer>`, `<Centered>`
 
-**Rationale**: Vue's SFC pattern is proven for component-based UI. Declarative markup with
-co-located logic enables rapid development and clear separation of concerns.
+**Rationale**: Blazor Razor provides production-grade IDE tooling, async-first design, and leverages 
+existing .NET ecosystem knowledge. Native IDE support eliminates need for custom LSP development and 
+ongoing tooling maintenance. Async component lifecycle enables real-world scenarios (API calls, file I/O, 
+database queries) with proper error handling and cancellation support.
+
+**Evolution from v1.0**: Previously defined "Vue-like Component Model" with `.tui` files. Changed to Razor 
+to gain native IDE tooling and async patterns. Semantic layout primitives (Column, Row, Panel) preserved 
+from v1.0 design.
 
 ### III. Beautiful by Default
 
@@ -118,8 +135,8 @@ Implementation MUST follow incremental phases with working software at each mile
 
 - **Phase 1 (MVP)**: Core runtime, C# views, basic layout, simple renderer, input loop
 - **Phase 2**: Navigation, shared state, global keys, theming
-- **Phase 3**: `.tui` Razor integration (Vue-like SFCs)
-- **Phase 4 (stretch)**: Tooling (VS Code extension, hot reload)
+- **Phase 3**: `.razor` Blazor integration (Razor component model with async support)
+- **Phase 4 (stretch)**: Hot reload, advanced tooling features
 
 Each phase MUST produce runnable, demonstrable functionality. Phase N MUST NOT block
 Phase N-1 from being useful.
@@ -154,6 +171,7 @@ Rndr.Samples.MyFocusTui/       # Reference sample application
 - `Rndr.Input` - Input events and sources
 - `Rndr.Navigation` - Navigation context and state
 - `Rndr.Diagnostics` - ActivitySource, Meter definitions
+- `Rndr.Razor` - Razor component integration and RenderTree adapter
 
 ### API Design Rules
 
@@ -165,7 +183,7 @@ Rndr.Samples.MyFocusTui/       # Reference sample application
 
 ### Dependencies
 
-- **Allowed**: Microsoft.Extensions.* packages, System.Diagnostics.*
+- **Allowed**: Microsoft.Extensions.* packages, System.Diagnostics.*, Microsoft.AspNetCore.Components (for Razor component runtime)
 - **Forbidden in Core**: OpenTelemetry packages, Spectre.Console, Terminal.Gui
 - **Samples Only**: May reference additional packages for demonstration
 
@@ -188,7 +206,8 @@ All code MUST pass these gates before merge:
 | Navigation | Unit tests for stack operations, route matching |
 | Layout Builders | Unit tests for node tree construction |
 | Renderer | Integration tests with fake IConsoleAdapter |
-| .tui Components | Snapshot tests via RndrTestHost |
+| .razor Components | Snapshot tests via RndrTestHost |
+| Async Lifecycle | Unit tests for async initialization, cancellation, error propagation |
 
 ### Commit Message Format
 
@@ -228,8 +247,8 @@ Scopes: core, layout, render, input, nav, razor, samples
 This constitution supersedes all other documentation when conflicts arise.
 Implementation decisions not covered here should choose the option that:
 
-1. Feels most natural to a .NET developer familiar with Minimal APIs + Vue
+1. Feels most natural to a .NET developer familiar with Minimal APIs + Blazor
 2. Keeps the implementation AOT-friendly and testable
 3. Keeps the public API small, consistent, and discoverable
 
-**Version**: 1.0.0 | **Ratified**: 2025-12-06 | **Last Amended**: 2025-12-06
+**Version**: 2.0.0 | **Ratified**: 2025-12-06 | **Last Amended**: 2025-12-07
