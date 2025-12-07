@@ -15,9 +15,9 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 [P] Add Microsoft.AspNetCore.Components package reference to src/Rndr/Rndr.csproj
-- [ ] T002 [P] Update Directory.Build.props to enable Razor SDK support globally
-- [ ] T003 [P] Configure .editorconfig for Razor file formatting rules
+- [X] T001 [P] Add Microsoft.AspNetCore.Components package reference to src/Rndr/Rndr.csproj
+- [X] T002 [P] Update Directory.Build.props to enable Razor SDK support globally
+- [X] T003 [P] Configure .editorconfig for Razor file formatting rules
 
 ---
 
@@ -27,17 +27,17 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Create IAsyncEventLoop interface in src/Rndr/IAsyncEventLoop.cs
-- [ ] T005 Refactor IEventLoop.RunAsync to support async Task return type in src/Rndr/IEventLoop.cs
-- [ ] T006 Implement AsyncEventLoop class with timeout and cancellation support in src/Rndr/AsyncEventLoop.cs
-- [ ] T007 Add AsyncTimeout property to RndrOptions in src/Rndr/RndrOptions.cs (default 30 seconds)
-- [ ] T008 Update DefaultEventLoop to implement async await patterns in src/Rndr/DefaultEventLoop.cs
-- [ ] T009 [P] Add FakeAsyncEventLoop test helper in src/Rndr.Testing/FakeAsyncEventLoop.cs
-- [ ] T010 [P] Create AsyncTestHelpers utility class in src/Rndr.Testing/AsyncTestHelpers.cs
-- [ ] T011 Update RndrTestHost to support async component testing in src/Rndr.Testing/RndrTestHost.cs
+- [X] T004 Create IAsyncEventLoop interface in src/Rndr/IAsyncEventLoop.cs
+- [X] T005 Refactor IEventLoop.RunAsync to support async Task return type in src/Rndr/IEventLoop.cs
+- [X] T006 Implement AsyncEventLoop class with timeout and cancellation support in src/Rndr/AsyncEventLoop.cs
+- [X] T007 Add AsyncTimeout property to RndrOptions in src/Rndr/RndrOptions.cs (default 30 seconds)
+- [X] T008 Update DefaultEventLoop to implement async await patterns in src/Rndr/DefaultEventLoop.cs
+- [X] T009 [P] Add FakeAsyncEventLoop test helper in src/Rndr.Testing/FakeAsyncEventLoop.cs
+- [X] T010 [P] Create AsyncTestHelpers utility class in src/Rndr.Testing/AsyncTestHelpers.cs
+- [X] T011 Update RndrTestHost to support async component testing in src/Rndr.Testing/RndrTestHost.cs
 - [ ] T012 Add unit tests for AsyncEventLoop in tests/Rndr.Tests/AsyncEventLoopTests.cs
-- [ ] T013 Verify existing .tui components still work with async event loop (regression test)
-- [ ] T014 Run AOT publish test - verify zero new trim warnings: dotnet publish -p:PublishAot=true
+- [X] T013 Verify existing .tui components still work with async event loop (regression test)
+- [X] T014 Run AOT publish test - verify zero new trim warnings: dotnet publish -p:PublishAot=true
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
