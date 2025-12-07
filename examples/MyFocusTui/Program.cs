@@ -17,16 +17,15 @@ builder.Services.AddRndrTheme(theme =>
 // Build the app
 var app = builder.Build();
 
-// Map views - use generated .tui components
-app.MapView("/", typeof(Home));
-app.MapView("/log", typeof(Log));
+// Map views - use generated .tui components with generic syntax for better type safety
+app.MapView<Home>("/");
+app.MapView<Log>("/log");
 
 // Register global key handlers
 app.OnGlobalKey((key, ctx) =>
 {
-    // Get the state store to access FocusState
-    var stateStore = ctx.Application.Services.GetRequiredService<IStateStore>();
-    var focusState = stateStore.GetOrCreate("global", "focus", () => new FocusState());
+    // Get global state using the new helper method
+    var focusState = ctx.StateGlobal("focus", new FocusState());
 
     // Handle Enter while editing to save immediately
     if (focusState.Value.IsEditing && key.Key == ConsoleKey.Enter)
@@ -66,7 +65,7 @@ app.OnGlobalKey((key, ctx) =>
         case 'h' or 'H':
             // Don't navigate if editing
             if (focusState.Value.IsEditing) return false;
-            ctx.Navigation.Navigate("/");
+            ctx.Navigation.NavigateHome();
             return true;
 
         case 'l' or 'L':

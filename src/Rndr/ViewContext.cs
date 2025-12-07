@@ -51,11 +51,17 @@ public sealed class ViewContext
     /// Gets or creates route-scoped state.
     /// </summary>
     /// <typeparam name="T">The type of the state value.</typeparam>
-    /// <param name="key">The state key.</param>
+    /// <param name="key">The state key. Must not be null or empty.</param>
     /// <param name="initialValue">The initial value if the state doesn't exist.</param>
     /// <returns>A signal containing the state value.</returns>
+    /// <exception cref="ArgumentException">Thrown when key is null or empty.</exception>
     public Signal<T> State<T>(string key, T initialValue)
     {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("State key cannot be null or empty.", nameof(key));
+        }
+
         return _stateStore.GetOrCreate(Route, key, () => initialValue, _onStateChanged);
     }
 
@@ -63,11 +69,17 @@ public sealed class ViewContext
     /// Gets or creates global state that persists across navigation.
     /// </summary>
     /// <typeparam name="T">The type of the state value.</typeparam>
-    /// <param name="key">The state key.</param>
+    /// <param name="key">The state key. Must not be null or empty.</param>
     /// <param name="initialValue">The initial value if the state doesn't exist.</param>
     /// <returns>A signal containing the state value.</returns>
+    /// <exception cref="ArgumentException">Thrown when key is null or empty.</exception>
     public Signal<T> StateGlobal<T>(string key, T initialValue)
     {
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            throw new ArgumentException("State key cannot be null or empty.", nameof(key));
+        }
+
         return _stateStore.GetOrCreate("global", key, () => initialValue, _onStateChanged);
     }
 }

@@ -35,11 +35,45 @@ public abstract class TuiComponentBase
     }
 
     /// <summary>
+    /// Called after the component has been rendered.
+    /// Override to perform post-render actions.
+    /// </summary>
+    protected virtual void OnAfterRender()
+    {
+    }
+
+    /// <summary>
+    /// Called when the component is being destroyed (e.g., navigating away).
+    /// Override to perform cleanup.
+    /// </summary>
+    protected virtual void OnDestroy()
+    {
+    }
+
+    /// <summary>
     /// Builds the component's layout.
     /// Override this method to define the component's UI.
     /// </summary>
     /// <param name="layout">The layout builder to use.</param>
     public abstract void Build(LayoutBuilder layout);
+
+    /// <summary>
+    /// Internal method to invoke the OnAfterRender lifecycle hook.
+    /// Called by the framework after rendering.
+    /// </summary>
+    internal void InvokeAfterRender()
+    {
+        OnAfterRender();
+    }
+
+    /// <summary>
+    /// Internal method to invoke the OnDestroy lifecycle hook.
+    /// Called by the framework when the component is destroyed.
+    /// </summary>
+    internal void InvokeDestroy()
+    {
+        OnDestroy();
+    }
 
     /// <summary>
     /// Gets or creates route-scoped state.

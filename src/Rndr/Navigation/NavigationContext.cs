@@ -28,6 +28,11 @@ public sealed class NavigationContext
     public string CurrentRoute => _state.CurrentRoute;
 
     /// <summary>
+    /// Gets the navigation state for inspecting the navigation stack.
+    /// </summary>
+    public INavigationState State => _state;
+
+    /// <summary>
     /// Navigates to a new route, pushing it onto the navigation stack.
     /// </summary>
     /// <param name="route">The route to navigate to.</param>
