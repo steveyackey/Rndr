@@ -494,7 +494,9 @@ public sealed class DefaultEventLoop : IEventLoop
     {
         if (node is TextInputNode)
         {
-            return textInputIndex++;
+            var currentIndex = textInputIndex;
+            textInputIndex++;
+            return currentIndex;
         }
         
         foreach (var child in node.Children)
