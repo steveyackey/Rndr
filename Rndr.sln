@@ -13,7 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rndr.Razor", "src\Rndr.Razo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rndr.Testing", "src\Rndr.Testing\Rndr.Testing.csproj", "{C3D4E5F6-7890-1234-5678-90ABCDEF1234}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rndr.Samples.MyFocusTui", "src\Rndr.Samples.MyFocusTui\Rndr.Samples.MyFocusTui.csproj", "{D4E5F678-9012-3456-7890-ABCDEF123456}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyFocusTui", "examples\MyFocusTui\MyFocusTui.csproj", "{D4E5F678-9012-3456-7890-ABCDEF123456}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rndr.Tests", "tests\Rndr.Tests\Rndr.Tests.csproj", "{E5F67890-1234-5678-90AB-CDEF12345678}"
 EndProject

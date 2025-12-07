@@ -1,4 +1,4 @@
-namespace Rndr.Samples.MyFocusTui.Models;
+namespace MyFocusTui.Models;
 
 /// <summary>
 /// Represents an action logged in the focus timer.

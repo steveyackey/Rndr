@@ -1,0 +1,151 @@
+@view
+@using MyFocusTui.Models
+
+@if (state.Value.IsEditing)
+{
+    <Column Padding="1" Gap="1">
+        <Spacer />
+        <Centered>
+            <Column>
+                <Panel Title="✏️ Edit Focus">
+                    <Column Padding="1" Gap="1">
+                        <Text>Edit your current focus:</Text>
+                        <TextInput Value="@state.Value.EditingText" OnChanged="@OnEditingTextChanged" Placeholder="Enter focus text..." />
+                        <Row Gap="2">
+                            <Button OnClick="@SaveEdit">💾 Save</Button>
+                            <Button OnClick="@CancelEdit">✕ Cancel</Button>
+                        </Row>
+                    </Column>
+                </Panel>
+            </Column>
+        </Centered>
+        <Spacer />
+        <Text Faint="true">[Enter] Save  [Esc] Cancel</Text>
+    </Column>
+}
+else
+{
+    <Column Padding="1" Gap="1">
+        <Text Bold="true" Accent="true">🎯 MyFocus TUI</Text>
+        <Text Faint="true">Stay focused. Get things done.</Text>
+
+        <Panel Title="Current Focus">
+            <Column Padding="1" Gap="1">
+                @if (state.Value.HasActiveFocus)
+                {
+                    <Text Bold="true" Accent="true">@state.Value.CurrentTodo</Text>
+                    <Row Gap="2">
+                        <Button OnClick="@FinishFocus">✓ Finish</Button>
+                        <Button OnClick="@ClearFocus">✕ Clear</Button>
+                    </Row>
+                }
+                else
+                {
+                    <Text Faint="true">No active focus</Text>
+                    <Button OnClick="@StartFocus">+ Start Focus</Button>
+                }
+            </Column>
+        </Panel>
+
+        <Panel Title="Recent Activity">
+            <Column Padding="1">
+                @if (state.Value.Log.Count == 0)
+                {
+                    <Text Faint="true">No activity yet</Text>
+                }
+                else
+                {
+                    @foreach (var entry in GetRecentEntries())
+                    {
+                        <Text>@FormatEntry(entry)</Text>
+                    }
+                    @if (state.Value.Log.Count > 3)
+                    {
+                        <Text Faint="true">@GetMoreText()</Text>
+                    }
+                }
+            </Column>
+        </Panel>
+
+        <Spacer />
+        <Text Faint="true">[Q] Quit  [E] Edit Task  [L] Log  [Tab] Navigate</Text>
+    </Column>
+}
+
+@code {
+    private Signal<FocusState> state = default!;
+
+    protected override void OnInit()
+    {
+        state = StateGlobal("focus", new FocusState());
+    }
+
+    void OnEditingTextChanged(string value)
+    {
+        state.Value.EditingText = value;
+    }
+
+    void StartFocus()
+    {
+        state.Value.CurrentTodo = "Working on important task";
+        state.Value.Log.Add(new ActionEntry
+        {
+            Timestamp = DateTime.Now,
+            Message = $"Started: {state.Value.CurrentTodo}"
+        });
+    }
+
+    void FinishFocus()
+    {
+        var todo = state.Value.CurrentTodo!;
+        state.Value.Log.Add(new ActionEntry
+        {
+            Timestamp = DateTime.Now,
+            Message = $"Completed: {todo}"
+        });
+        state.Value.CurrentTodo = null;
+    }
+
+    void ClearFocus()
+    {
+        var todo = state.Value.CurrentTodo!;
+        state.Value.Log.Add(new ActionEntry
+        {
+            Timestamp = DateTime.Now,
+            Message = $"Cleared: {todo}"
+        });
+        state.Value.CurrentTodo = null;
+    }
+
+    void SaveEdit()
+    {
+        if (!string.IsNullOrWhiteSpace(state.Value.EditingText))
+        {
+            var oldTodo = state.Value.CurrentTodo;
+            state.Value.CurrentTodo = state.Value.EditingText.Trim();
+            state.Value.Log.Add(new ActionEntry
+            {
+                Timestamp = DateTime.Now,
+                Message = $"Edited: {oldTodo} → {state.Value.CurrentTodo}"
+            });
+        }
+        state.Value.IsEditing = false;
+        state.Value.EditingText = string.Empty;
+    }
+
+    void CancelEdit()
+    {
+        state.Value.IsEditing = false;
+        state.Value.EditingText = string.Empty;
+    }
+
+    IEnumerable<ActionEntry> GetRecentEntries() =>
+        state.Value.Log.OrderByDescending(e => e.Timestamp).Take(3);
+
+    string FormatEntry(ActionEntry entry) =>
+        $"{entry.Timestamp:HH:mm} - {entry.Message}";
+
+    string GetMoreText() =>
+        $"  ... and {state.Value.Log.Count - 3} more";
+}
+

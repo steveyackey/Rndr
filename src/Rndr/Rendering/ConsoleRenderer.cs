@@ -12,6 +12,10 @@ public sealed class ConsoleRenderer : ITuiRenderer
     private int _currentRow;
     private int _buttonIndex;
     private int _focusedButtonIndex;
+    private int _textInputIndex;
+    private int _focusedTextInputIndex;
+    private int _cursorLeft = -1;
+    private int _cursorTop = -1;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ConsoleRenderer"/> class.
@@ -25,18 +29,30 @@ public sealed class ConsoleRenderer : ITuiRenderer
     }
 
     /// <inheritdoc />
-    public void Render(IReadOnlyList<Node> rootNodes, int focusedButtonIndex = -1)
+    public void Render(IReadOnlyList<Node> rootNodes, int focusedButtonIndex = -1, int focusedTextInputIndex = -1)
     {
         _currentRow = 0;
         _buttonIndex = 0;
         _focusedButtonIndex = focusedButtonIndex;
+        _textInputIndex = 0;
+        _focusedTextInputIndex = focusedTextInputIndex;
+        _cursorLeft = -1;
+        _cursorTop = -1;
 
+        // Hide cursor by default; we'll show it when a text input is focused
         _console.HideCursor();
         _console.Clear();
 
         foreach (var node in rootNodes)
         {
             RenderNode(node, 0, _console.WindowWidth);
+        }
+
+        // After rendering everything, place the cursor at the focused text input (if any)
+        if (_cursorLeft >= 0 && _cursorTop >= 0)
+        {
+            _console.ShowCursor();
+            _console.WriteAt(_cursorLeft, _cursorTop, string.Empty);
         }
 
         _console.Flush();
@@ -261,12 +277,27 @@ public sealed class ConsoleRenderer : ITuiRenderer
 
     private void RenderTextInput(TextInputNode node, int leftOffset, int availableWidth)
     {
+        var isFocused = _textInputIndex == _focusedTextInputIndex;
         var displayValue = string.IsNullOrEmpty(node.Value) ? node.Placeholder ?? "" : node.Value;
-        var color = string.IsNullOrEmpty(node.Value) ? _theme.MutedTextColor : _theme.TextColor;
+        var color = isFocused ? _theme.AccentColor :
+                    string.IsNullOrEmpty(node.Value) ? _theme.MutedTextColor :
+                    _theme.TextColor;
 
-        var inputDisplay = $"[{displayValue.PadRight(Math.Max(10, availableWidth - 4))}]";
-        _console.WriteAt(leftOffset, _currentRow, inputDisplay, color);
+        var content = displayValue.PadRight(Math.Max(10, availableWidth - 4));
+        var inputDisplay = $"[{content}]";
+        var row = _currentRow;
+
+        _console.WriteAt(leftOffset, row, inputDisplay, color);
+
+        if (isFocused)
+        {
+            // Position cursor just after the current text inside the brackets
+            _cursorLeft = leftOffset + 1 + displayValue.Length;
+            _cursorTop = row;
+        }
+
         _currentRow++;
+        _textInputIndex++;
     }
 }
 

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Rndr.Samples.MyFocusTui</RootNamespace>
+    <RootNamespace>MyFocusTui</RootNamespace>
     <AssemblyName>MyFocusTui</AssemblyName>
     <IsPackable>false</IsPackable>
     <!-- Save generated sources for inspection -->
@@ -11,9 +11,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Rndr\Rndr.csproj" />
+    <ProjectReference Include="..\..\src\Rndr\Rndr.csproj" />
     <!-- Reference as analyzer for source generator -->
-    <ProjectReference Include="..\Rndr.Razor\Rndr.Razor.csproj"
+    <ProjectReference Include="..\..\src\Rndr.Razor\Rndr.Razor.csproj"
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false" />
   </ItemGroup>

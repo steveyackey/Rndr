@@ -12,6 +12,7 @@ public interface ITuiRenderer
     /// </summary>
     /// <param name="rootNodes">The root nodes of the layout tree.</param>
     /// <param name="focusedButtonIndex">The index of the currently focused button, or -1 for none.</param>
-    void Render(IReadOnlyList<Node> rootNodes, int focusedButtonIndex = -1);
+    /// <param name="focusedTextInputIndex">The index of the currently focused text input, or -1 for none.</param>
+    void Render(IReadOnlyList<Node> rootNodes, int focusedButtonIndex = -1, int focusedTextInputIndex = -1);
 }
 

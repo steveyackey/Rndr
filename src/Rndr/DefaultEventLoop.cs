@@ -23,8 +23,19 @@ public sealed class DefaultEventLoop : IEventLoop
     private readonly RndrOptions _options;
 
     private bool _isDirty = true;
-    private int _focusedButtonIndex;
+    private int _focusedElementIndex = -1;
     private List<ButtonNode> _currentButtons = [];
+    private List<TextInputNode> _currentTextInputs = [];
+    private List<FocusableElement> _focusableElements = [];
+    
+    private enum FocusType { Button, TextInput }
+    
+    private sealed class FocusableElement
+    {
+        public FocusType Type { get; set; }
+        public int ButtonIndex { get; set; }
+        public int TextInputIndex { get; set; }
+    }
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DefaultEventLoop"/> class.
@@ -138,22 +149,47 @@ public sealed class DefaultEventLoop : IEventLoop
             viewRegistration.LayoutBuilder?.Invoke(viewContext, layout);
         }
 
-        // Build node tree and find buttons
+        // Build node tree and find focusable elements in DOM order
         var nodes = layout.Build();
         _currentButtons = CollectButtons(nodes);
+        _currentTextInputs = CollectTextInputs(nodes);
+        _focusableElements = CollectFocusableElementsInOrder(nodes);
 
         // Ensure focus is valid
-        if (_currentButtons.Count > 0)
+        if (_focusableElements.Count > 0)
         {
-            _focusedButtonIndex = Math.Clamp(_focusedButtonIndex, 0, _currentButtons.Count - 1);
+            // If no element is focused or focus is out of bounds, focus the first element
+            if (_focusedElementIndex < 0 || _focusedElementIndex >= _focusableElements.Count)
+            {
+                _focusedElementIndex = 0;
+            }
+            else
+            {
+                _focusedElementIndex = Math.Clamp(_focusedElementIndex, 0, _focusableElements.Count - 1);
+            }
         }
         else
         {
-            _focusedButtonIndex = -1;
+            _focusedElementIndex = -1;
         }
 
-        // Render
-        _renderer.Render(nodes, _focusedButtonIndex);
+        // Determine which button/text input is focused for rendering
+        var focusedButtonIndex = -1;
+        var focusedTextInputIndex = -1;
+        if (_focusedElementIndex >= 0 && _focusedElementIndex < _focusableElements.Count)
+        {
+            var focused = _focusableElements[_focusedElementIndex];
+            if (focused.Type == FocusType.Button)
+            {
+                focusedButtonIndex = focused.ButtonIndex;
+            }
+            else
+            {
+                focusedTextInputIndex = focused.TextInputIndex;
+            }
+        }
+
+        _renderer.Render(nodes, focusedButtonIndex, focusedTextInputIndex);
 
         sw.Stop();
         RndrDiagnostics.RecordFrameRendered(sw.Elapsed.TotalMilliseconds);
@@ -161,7 +197,25 @@ public sealed class DefaultEventLoop : IEventLoop
 
     private void ProcessKeyEvent(KeyEvent key, TuiApp app)
     {
-        // First, check global handlers
+        // Handle text input if a TextInput is focused - do this BEFORE global handlers
+        // so that typing works even if the character matches a global shortcut
+        if (_focusedElementIndex >= 0 && _focusedElementIndex < _focusableElements.Count)
+        {
+            var focused = _focusableElements[_focusedElementIndex];
+            if (focused.Type == FocusType.TextInput)
+            {
+                var textInput = _currentTextInputs[focused.TextInputIndex];
+                if (HandleTextInputKey(key, textInput))
+                {
+                    _isDirty = true;
+                    return;
+                }
+                // If HandleTextInputKey returned false, it means this key should bubble up
+                // (e.g., Tab, Enter, Escape). Continue to global handlers below.
+            }
+        }
+
+        // Check global handlers (only if TextInput didn't consume the key)
         if (app.HandleGlobalKey(key))
         {
             _isDirty = true;
@@ -173,32 +227,103 @@ public sealed class DefaultEventLoop : IEventLoop
         {
             case ConsoleKey.Tab when key.Modifiers.HasFlag(ConsoleModifiers.Shift):
                 // Shift+Tab: Move focus backward
-                if (_currentButtons.Count > 0)
+                if (_focusableElements.Count > 0)
                 {
-                    _focusedButtonIndex = (_focusedButtonIndex - 1 + _currentButtons.Count) % _currentButtons.Count;
+                    _focusedElementIndex = (_focusedElementIndex - 1 + _focusableElements.Count) % _focusableElements.Count;
                     _isDirty = true;
                 }
                 break;
 
             case ConsoleKey.Tab:
                 // Tab: Move focus forward
-                if (_currentButtons.Count > 0)
+                if (_focusableElements.Count > 0)
                 {
-                    _focusedButtonIndex = (_focusedButtonIndex + 1) % _currentButtons.Count;
+                    _focusedElementIndex = (_focusedElementIndex + 1) % _focusableElements.Count;
                     _isDirty = true;
                 }
                 break;
 
             case ConsoleKey.Enter:
             case ConsoleKey.Spacebar:
-                // Activate focused button
-                if (_focusedButtonIndex >= 0 && _focusedButtonIndex < _currentButtons.Count)
+                // Activate focused button (only if button is focused, not TextInput)
+                if (_focusedElementIndex >= 0 && _focusedElementIndex < _focusableElements.Count)
                 {
-                    var button = _currentButtons[_focusedButtonIndex];
-                    button.OnClick?.Invoke();
-                    _isDirty = true;
+                    var focused = _focusableElements[_focusedElementIndex];
+                    if (focused.Type == FocusType.Button)
+                    {
+                        var button = _currentButtons[focused.ButtonIndex];
+                        button.OnClick?.Invoke();
+                        _isDirty = true;
+                    }
                 }
                 break;
+        }
+    }
+
+    private bool HandleTextInputKey(KeyEvent key, TextInputNode textInput)
+    {
+        switch (key.Key)
+        {
+            case ConsoleKey.Backspace:
+                if (textInput.Value.Length > 0)
+                {
+                    var backspaceValue = textInput.Value[..^1];
+                    textInput.Value = backspaceValue; // Update node immediately
+                    textInput.OnChanged?.Invoke(backspaceValue); // Update component state
+                    return true;
+                }
+                return true;
+
+            case ConsoleKey.Delete:
+                // Delete key doesn't typically work in console input, but handle it
+                return true;
+
+            case ConsoleKey.Enter:
+            case ConsoleKey.Tab:
+            case ConsoleKey.Escape:
+                // These keys should not be handled here, let them bubble up
+                return false;
+
+            default:
+                // Handle printable characters
+                string? updatedValue = null;
+                
+                // Check both KeyChar and if it's a letter/number key
+                if (key.KeyChar != '\0' && !char.IsControl(key.KeyChar))
+                {
+                    updatedValue = textInput.Value + key.KeyChar;
+                }
+                // Also handle letter keys that might have KeyChar as '\0' in some cases
+                else if (key.Key >= ConsoleKey.A && key.Key <= ConsoleKey.Z)
+                {
+                    var charToAdd = (char)(key.Key - ConsoleKey.A + (key.Modifiers.HasFlag(ConsoleModifiers.Shift) ? 'A' : 'a'));
+                    updatedValue = textInput.Value + charToAdd;
+                }
+                // Handle number keys
+                else if (key.Key >= ConsoleKey.D0 && key.Key <= ConsoleKey.D9)
+                {
+                    var charToAdd = (char)(key.Key - ConsoleKey.D0 + '0');
+                    updatedValue = textInput.Value + charToAdd;
+                }
+                // Handle numpad numbers
+                else if (key.Key >= ConsoleKey.NumPad0 && key.Key <= ConsoleKey.NumPad9)
+                {
+                    var charToAdd = (char)(key.Key - ConsoleKey.NumPad0 + '0');
+                    updatedValue = textInput.Value + charToAdd;
+                }
+                // Handle space
+                else if (key.Key == ConsoleKey.Spacebar)
+                {
+                    updatedValue = textInput.Value + ' ';
+                }
+                
+                if (updatedValue != null)
+                {
+                    textInput.Value = updatedValue; // Update node immediately
+                    textInput.OnChanged?.Invoke(updatedValue); // Update component state
+                    return true;
+                }
+                return false;
         }
     }
 
@@ -227,6 +352,74 @@ public sealed class DefaultEventLoop : IEventLoop
         foreach (var child in node.Children)
         {
             CollectButtonsRecursive(child, buttons);
+        }
+    }
+
+    private static List<TextInputNode> CollectTextInputs(IReadOnlyList<Node> nodes)
+    {
+        var textInputs = new List<TextInputNode>();
+        foreach (var node in nodes)
+        {
+            CollectTextInputsRecursive(node, textInputs);
+        }
+        return textInputs;
+    }
+
+    private static void CollectTextInputsRecursive(Node node, List<TextInputNode> textInputs)
+    {
+        if (node is TextInputNode textInput)
+        {
+            textInputs.Add(textInput);
+        }
+
+        foreach (var child in node.Children)
+        {
+            CollectTextInputsRecursive(child, textInputs);
+        }
+    }
+
+    private List<FocusableElement> CollectFocusableElementsInOrder(IReadOnlyList<Node> nodes)
+    {
+        var elements = new List<FocusableElement>();
+        var buttonIndex = 0;
+        var textInputIndex = 0;
+        
+        foreach (var node in nodes)
+        {
+            CollectFocusableElementsRecursive(node, elements, ref buttonIndex, ref textInputIndex);
+        }
+        
+        return elements;
+    }
+
+    private static void CollectFocusableElementsRecursive(
+        Node node, 
+        List<FocusableElement> elements, 
+        ref int buttonIndex, 
+        ref int textInputIndex)
+    {
+        if (node is ButtonNode)
+        {
+            elements.Add(new FocusableElement
+            {
+                Type = FocusType.Button,
+                ButtonIndex = buttonIndex++,
+                TextInputIndex = -1
+            });
+        }
+        else if (node is TextInputNode)
+        {
+            elements.Add(new FocusableElement
+            {
+                Type = FocusType.TextInput,
+                ButtonIndex = -1,
+                TextInputIndex = textInputIndex++
+            });
+        }
+
+        foreach (var child in node.Children)
+        {
+            CollectFocusableElementsRecursive(child, elements, ref buttonIndex, ref textInputIndex);
         }
     }
 

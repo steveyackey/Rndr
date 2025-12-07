@@ -1,5 +1,5 @@
 @view
-@using Rndr.Samples.MyFocusTui.Models
+@using MyFocusTui.Models
 
 <Column Padding="1" Gap="1">
     <Text Bold="true" Accent="true">📋 Activity Log</Text>
