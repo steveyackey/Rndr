@@ -65,6 +65,25 @@ public static class NodeExtensions
     }
 
     /// <summary>
+    /// Finds the first modal with the specified title.
+    /// </summary>
+    /// <param name="nodes">The nodes to search.</param>
+    /// <param name="title">The modal title to find.</param>
+    /// <returns>The found modal node, or null if not found.</returns>
+    public static ModalNode? FindModal(this IReadOnlyList<Node> nodes, string title)
+    {
+        foreach (var node in nodes)
+        {
+            var found = FindModalRecursive(node, title);
+            if (found != null)
+            {
+                return found;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
     /// Gets all buttons from the node tree.
     /// </summary>
     /// <param name="nodes">The nodes to search.</param>
@@ -142,6 +161,25 @@ public static class NodeExtensions
         foreach (var child in node.Children)
         {
             var found = FindPanelRecursive(child, title);
+            if (found != null)
+            {
+                return found;
+            }
+        }
+
+        return null;
+    }
+
+    private static ModalNode? FindModalRecursive(Node node, string title)
+    {
+        if (node is ModalNode modal && modal.Title == title)
+        {
+            return modal;
+        }
+
+        foreach (var child in node.Children)
+        {
+            var found = FindModalRecursive(child, title);
             if (found != null)
             {
                 return found;

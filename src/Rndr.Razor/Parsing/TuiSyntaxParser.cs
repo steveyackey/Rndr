@@ -20,7 +20,7 @@ public sealed class TuiSyntaxParser
     /// </summary>
     public static readonly HashSet<string> ValidTags = new(StringComparer.Ordinal)
     {
-        "Column", "Row", "Panel", "Centered", "Text", "Button", "Spacer", "TextInput"
+        "Column", "Row", "Panel", "Modal", "Centered", "Text", "Button", "Spacer", "TextInput"
     };
 
     /// <summary>
@@ -28,7 +28,7 @@ public sealed class TuiSyntaxParser
     /// </summary>
     public static readonly HashSet<string> ContainerTags = new(StringComparer.Ordinal)
     {
-        "Column", "Row", "Panel", "Centered"
+        "Column", "Row", "Panel", "Modal", "Centered"
     };
 
     /// <summary>
@@ -39,6 +39,7 @@ public sealed class TuiSyntaxParser
         ["Column"] = new() { "Padding", "Gap" },
         ["Row"] = new() { "Gap" },
         ["Panel"] = new() { "Title", "Padding" },
+        ["Modal"] = new() { "Title", "Width", "Height", "OnClose", "AllowDismiss" },
         ["Centered"] = new(),
         ["Text"] = new() { "Bold", "Accent", "Faint", "Align" },
         ["Button"] = new() { "OnClick", "Width", "Primary" },

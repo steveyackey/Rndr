@@ -66,6 +66,25 @@ public sealed class RowBuilder
     }
 
     /// <summary>
+    /// Adds a modal overlay dialog.
+    /// </summary>
+    /// <param name="title">The modal title.</param>
+    /// <param name="configure">Action to configure the modal's contents.</param>
+    /// <returns>This builder for chaining.</returns>
+    public RowBuilder Modal(string title, Action<LayoutBuilder> configure)
+    {
+        var node = new ModalNode { Title = title };
+        var innerBuilder = new LayoutBuilder();
+        configure(innerBuilder);
+        foreach (var child in innerBuilder.Build())
+        {
+            node.Children.Add(child);
+        }
+        _node.Children.Add(node);
+        return this;
+    }
+
+    /// <summary>
     /// Sets the gap between children.
     /// </summary>
     /// <param name="value">The gap value in character cells.</param>

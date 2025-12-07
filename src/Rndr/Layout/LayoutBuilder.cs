@@ -41,6 +41,25 @@ public sealed class LayoutBuilder
     }
 
     /// <summary>
+    /// Adds a modal overlay dialog.
+    /// </summary>
+    /// <param name="title">The modal title.</param>
+    /// <param name="configure">Action to configure the modal's contents.</param>
+    /// <returns>This builder for chaining.</returns>
+    public LayoutBuilder Modal(string title, Action<LayoutBuilder> configure)
+    {
+        var node = new ModalNode { Title = title };
+        var innerBuilder = new LayoutBuilder();
+        configure(innerBuilder);
+        foreach (var child in innerBuilder.Build())
+        {
+            node.Children.Add(child);
+        }
+        _nodes.Add(node);
+        return this;
+    }
+
+    /// <summary>
     /// Sets the default padding for subsequent nodes.
     /// </summary>
     /// <param name="value">The padding value in character cells.</param>

@@ -71,6 +71,9 @@ public sealed class ConsoleRenderer : ITuiRenderer
             case NodeKind.Panel:
                 RenderPanel((PanelNode)node, leftOffset, availableWidth);
                 break;
+            case NodeKind.Modal:
+                RenderModal((ModalNode)node, leftOffset, availableWidth);
+                break;
             case NodeKind.Text:
                 RenderText((TextNode)node, leftOffset, availableWidth);
                 break;
@@ -214,6 +217,88 @@ public sealed class ConsoleRenderer : ITuiRenderer
         var bottomBorder = bottomLeft + new string(horizontal[0], availableWidth - 2) + bottomRight;
         _console.WriteAt(leftOffset, _currentRow, bottomBorder, _theme.TextColor);
         _currentRow++;
+    }
+
+    private void RenderModal(ModalNode node, int leftOffset, int availableWidth)
+    {
+        // Modals are rendered as overlays with emphasis and centered positioning (both horizontal and vertical)
+        // Use double-line borders to make them more prominent
+        var borderChars = ("╔", "╗", "╚", "╝", "═", "║");
+        var (topLeft, topRight, bottomLeft, bottomRight, horizontal, vertical) = borderChars;
+
+        // Constants for modal sizing
+        const int MinModalWidth = 20;
+        const int DefaultMinWidth = 60;
+        const double DefaultWidthRatio = 0.6;
+
+        // Determine modal width - use provided width or default to 60% of available width
+        var modalWidth = node.Width ?? Math.Max(MinModalWidth, Math.Min(DefaultMinWidth, (int)(availableWidth * DefaultWidthRatio)));
+        var horizontalCenterOffset = (availableWidth - modalWidth) / 2;
+        var actualLeft = leftOffset + horizontalCenterOffset;
+
+        // First pass: Calculate modal height by rendering to a temporary position
+        var savedCurrentRow = _currentRow;
+        var tempRow = 0;
+        _currentRow = tempRow;
+
+        // Calculate content height
+        var tempContentStart = _currentRow + 1; // +1 for top border
+        _currentRow = tempContentStart;
+        
+        foreach (var child in node.Children)
+        {
+            RenderNode(child, actualLeft + 2, modalWidth - 4);
+        }
+        
+        var contentHeight = _currentRow - tempContentStart;
+        var totalModalHeight = contentHeight + 2; // +2 for top and bottom borders
+
+        // Calculate vertical center position
+        var windowHeight = _console.WindowHeight;
+        var verticalCenterOffset = Math.Max(0, (windowHeight - totalModalHeight) / 2);
+        var modalTopRow = verticalCenterOffset;
+
+        // Restore the current row and render at the centered position
+        _currentRow = modalTopRow;
+
+        // Top border with title - truncate title if too long
+        var title = node.Title ?? "";
+        var maxTitleLength = modalWidth - 4; // Reserve space for borders and padding
+        if (title.Length > maxTitleLength)
+        {
+            title = title.Substring(0, maxTitleLength - 3) + "...";
+        }
+        var titleDisplay = string.IsNullOrEmpty(title) ? "" : $" {title} ";
+        var topBorderLength = modalWidth - 2 - titleDisplay.Length;
+        var topBorder = topLeft + titleDisplay + new string(horizontal[0], Math.Max(0, topBorderLength)) + topRight;
+
+        _console.WriteAt(actualLeft, _currentRow, topBorder, _theme.AccentColor);
+        _currentRow++;
+
+        // Store starting row for content
+        var contentStartRow = _currentRow;
+
+        // Render children at the centered position
+        foreach (var child in node.Children)
+        {
+            RenderNode(child, actualLeft + 2, modalWidth - 4);
+        }
+
+        // Add vertical borders for each content row
+        var contentEndRow = _currentRow;
+        for (var row = contentStartRow; row < contentEndRow; row++)
+        {
+            _console.WriteAt(actualLeft, row, vertical, _theme.AccentColor);
+            _console.WriteAt(actualLeft + modalWidth - 1, row, vertical, _theme.AccentColor);
+        }
+
+        // Bottom border
+        var bottomBorder = bottomLeft + new string(horizontal[0], modalWidth - 2) + bottomRight;
+        _console.WriteAt(actualLeft, _currentRow, bottomBorder, _theme.AccentColor);
+        _currentRow++;
+
+        // Restore original row position so subsequent content doesn't get affected
+        _currentRow = savedCurrentRow;
     }
 
     private void RenderText(TextNode node, int leftOffset, int availableWidth)
