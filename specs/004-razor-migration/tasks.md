@@ -51,8 +51,8 @@
 
 ### Implementation for User Story 4
 
-- [ ] T015 Create IRenderTreeAdapter interface in specs/004-razor-migration/contracts/IRenderTreeAdapter.cs
-- [ ] T016 Implement RenderTreeToLayoutAdapter class skeleton in src/Rndr/Rendering/RenderTreeToLayoutAdapter.cs
+- [X] T015 Create IRenderTreeAdapter interface in specs/004-razor-migration/contracts/IRenderTreeAdapter.cs
+- [X] T016 Implement RenderTreeToLayoutAdapter class skeleton in src/Rndr/Rendering/RenderTreeToLayoutAdapter.cs
 - [ ] T017 [US4] Implement BeginCapture method to capture RenderTreeBuilder frames in src/Rndr/Rendering/RenderTreeToLayoutAdapter.cs
 - [ ] T018 [US4] Implement ProcessFrame method to handle individual RenderTreeFrame in src/Rndr/Rendering/RenderTreeToLayoutAdapter.cs
 - [ ] T019 [US4] Implement OpenElement method with element stack management in src/Rndr/Rendering/RenderTreeToLayoutAdapter.cs
