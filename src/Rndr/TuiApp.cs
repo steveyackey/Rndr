@@ -70,6 +70,24 @@ public sealed class TuiApp : IAsyncDisposable
     /// <summary>
     /// Maps a route to a .tui component type.
     /// </summary>
+    /// <typeparam name="TView">The component type to instantiate.</typeparam>
+    /// <param name="route">The route path.</param>
+    /// <returns>This app instance for chaining.</returns>
+    public TuiApp MapView<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.PublicProperties)] TView>(string route)
+        where TView : TuiComponentBase
+    {
+        _routes[route] = new ViewRegistration
+        {
+            Route = route,
+            ComponentType = typeof(TView)
+        };
+
+        return this;
+    }
+
+    /// <summary>
+    /// Maps a route to a .tui component type.
+    /// </summary>
     /// <param name="route">The route path.</param>
     /// <param name="viewComponentType">The component type to instantiate.</param>
     /// <returns>This app instance for chaining.</returns>

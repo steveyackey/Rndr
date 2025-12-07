@@ -55,7 +55,9 @@ using MyTuiApp.Pages;
 
 var app = TuiApplication.CreateBuilder(args).Build();
 
-app.MapView("/", typeof(Home));
+// Type-safe generic MapView - no typeof() needed!
+app.MapView<Home>("/");
+
 app.OnGlobalKey((key, ctx) =>
 {
     if (key.KeyChar is 'q' or 'Q')
@@ -120,19 +122,25 @@ app.MapView("/", view =>
 ## Navigation
 
 ```csharp
-// Register multiple views
-app.MapView("/", typeof(Home));
-app.MapView("/settings", typeof(Settings));
+// Register multiple views with type-safe generics
+app.MapView<Home>("/");
+app.MapView<Settings>("/settings");
 
 // Navigate from within a view
 Context.Navigation.Navigate("/settings");  // Push
 Context.Navigation.Back();                 // Pop
 Context.Navigation.Replace("/other");      // Replace current
 
+// Ergonomic navigation extensions
+Context.Navigation.NavigateHome();         // Navigate to "/"
+Context.Navigation.BackOrHome();           // Back if possible, else home
+if (Context.Navigation.CanGoBack()) { ... } // Check if can go back
+
 // Global navigation keys
 app.OnGlobalKey((key, ctx) =>
 {
-    if (key.KeyChar == 'h') { ctx.Navigation.Navigate("/"); return true; }
+    // Use the new NavigateHome() extension
+    if (key.KeyChar == 'h') { ctx.Navigation.NavigateHome(); return true; }
     return false;
 });
 ```
@@ -146,8 +154,44 @@ var count = ctx.State("count", 0);
 // Global state (persists across navigation)
 var user = ctx.StateGlobal("user", new User { Name = "Guest" });
 
+// Access global state from global key handlers (no DI required!)
+app.OnGlobalKey((key, ctx) =>
+{
+    var settings = ctx.StateGlobal("settings", new Settings());
+    // ...
+});
+
 // State changes automatically trigger re-renders
 count.Value++;  // UI updates
+
+// State keys are validated - helpful error messages
+// ctx.State("", 0);  // throws ArgumentException
+```
+
+## Component Lifecycle
+
+`.tui` components have lifecycle hooks for initialization, rendering, and cleanup:
+
+```csharp
+@code {
+    protected override void OnInit()
+    {
+        // Called once when component is initialized
+        // Perfect for setting up state
+    }
+
+    protected override void OnAfterRender()
+    {
+        // Called after each render
+        // Use for side effects or logging
+    }
+
+    protected override void OnDestroy()
+    {
+        // Called when navigating away
+        // Clean up resources, cancel timers, etc.
+    }
+}
 ```
 
 ## Theming
@@ -174,14 +218,17 @@ public class CounterTests
     [Fact]
     public void Counter_Increments_OnClick()
     {
-        var (nodes, context) = RndrTestHost.BuildComponent<Home>(); // generated from Home.tui
-        var button = nodes.FindButton("+");
-
-        button?.OnClick?.Invoke();
-
+        // Build and test components easily
+        var (nodes, context) = RndrTestHost.BuildComponent<Home>();
+        
+        // Fluent testing helpers
+        nodes.ClickButton("+");  // Find and click in one line!
+        
         var (updated, _) = RndrTestHost.BuildComponent<Home>(stateStore: context.StateStore);
-        var text = updated.FindText("Count:");
-        Assert.Contains("1", text!.Content);
+        
+        // Assert with helpful error messages
+        var text = updated.AssertTextExists("Count:");
+        Assert.Contains("1", text.Content);
     }
 }
 ```

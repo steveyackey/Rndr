@@ -94,6 +94,55 @@ public static class NodeExtensions
         return texts;
     }
 
+    /// <summary>
+    /// Clicks a button with the specified label.
+    /// </summary>
+    /// <param name="nodes">The nodes to search.</param>
+    /// <param name="label">The button label to find and click.</param>
+    /// <returns>True if the button was found and clicked, false otherwise.</returns>
+    public static bool ClickButton(this IReadOnlyList<Node> nodes, string label)
+    {
+        var button = nodes.FindButton(label);
+        if (button?.OnClick != null)
+        {
+            button.OnClick.Invoke();
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Asserts that a button with the specified label exists.
+    /// </summary>
+    /// <param name="nodes">The nodes to search.</param>
+    /// <param name="label">The button label to find.</param>
+    /// <exception cref="InvalidOperationException">Thrown if the button is not found.</exception>
+    public static ButtonNode AssertButtonExists(this IReadOnlyList<Node> nodes, string label)
+    {
+        var button = nodes.FindButton(label);
+        if (button == null)
+        {
+            throw new InvalidOperationException($"Button with label '{label}' not found.");
+        }
+        return button;
+    }
+
+    /// <summary>
+    /// Asserts that text containing the specified content exists.
+    /// </summary>
+    /// <param name="nodes">The nodes to search.</param>
+    /// <param name="contains">The text to search for.</param>
+    /// <exception cref="InvalidOperationException">Thrown if the text is not found.</exception>
+    public static TextNode AssertTextExists(this IReadOnlyList<Node> nodes, string contains)
+    {
+        var text = nodes.FindText(contains);
+        if (text == null)
+        {
+            throw new InvalidOperationException($"Text containing '{contains}' not found.");
+        }
+        return text;
+    }
+
     private static ButtonNode? FindButtonRecursive(Node node, string label)
     {
         if (node is ButtonNode button && button.Label == label)
