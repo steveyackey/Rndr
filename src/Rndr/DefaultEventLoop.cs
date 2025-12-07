@@ -155,11 +155,28 @@ public sealed class DefaultEventLoop : IEventLoop
         _currentTextInputs = CollectTextInputs(nodes);
         _focusableElements = CollectFocusableElementsInOrder(nodes);
 
+        // Check if there's a modal and find the first text input inside it
+        var modalTextInputIndex = FindFirstTextInputInModal(nodes);
+        
         // Ensure focus is valid
         if (_focusableElements.Count > 0)
         {
+            // If there's a modal with a text input, focus it
+            if (modalTextInputIndex >= 0)
+            {
+                // Find the focusable element index for this text input
+                for (int i = 0; i < _focusableElements.Count; i++)
+                {
+                    if (_focusableElements[i].Type == FocusType.TextInput && 
+                        _focusableElements[i].TextInputIndex == modalTextInputIndex)
+                    {
+                        _focusedElementIndex = i;
+                        break;
+                    }
+                }
+            }
             // If no element is focused or focus is out of bounds, focus the first element
-            if (_focusedElementIndex < 0 || _focusedElementIndex >= _focusableElements.Count)
+            else if (_focusedElementIndex < 0 || _focusedElementIndex >= _focusableElements.Count)
             {
                 _focusedElementIndex = 0;
             }
@@ -421,6 +438,75 @@ public sealed class DefaultEventLoop : IEventLoop
         {
             CollectFocusableElementsRecursive(child, elements, ref buttonIndex, ref textInputIndex);
         }
+    }
+
+    private static int FindFirstTextInputInModal(IReadOnlyList<Node> nodes)
+    {
+        var textInputIndex = 0;
+        
+        foreach (var node in nodes)
+        {
+            var result = FindFirstTextInputInModalRecursive(node, ref textInputIndex);
+            if (result >= 0)
+            {
+                return result;
+            }
+        }
+        
+        return -1;
+    }
+
+    private static int FindFirstTextInputInModalRecursive(Node node, ref int textInputIndex)
+    {
+        // If this is a modal, find the first text input inside it
+        if (node is ModalNode)
+        {
+            foreach (var child in node.Children)
+            {
+                var result = FindTextInputInSubtree(child, ref textInputIndex);
+                if (result >= 0)
+                {
+                    return result;
+                }
+            }
+            return -1;
+        }
+        
+        // If not a modal, skip text inputs at this level but check children for modals
+        if (node is TextInputNode)
+        {
+            textInputIndex++;
+        }
+        
+        foreach (var child in node.Children)
+        {
+            var result = FindFirstTextInputInModalRecursive(child, ref textInputIndex);
+            if (result >= 0)
+            {
+                return result;
+            }
+        }
+        
+        return -1;
+    }
+
+    private static int FindTextInputInSubtree(Node node, ref int textInputIndex)
+    {
+        if (node is TextInputNode)
+        {
+            return textInputIndex++;
+        }
+        
+        foreach (var child in node.Children)
+        {
+            var result = FindTextInputInSubtree(child, ref textInputIndex);
+            if (result >= 0)
+            {
+                return result;
+            }
+        }
+        
+        return -1;
     }
 
     /// <summary>

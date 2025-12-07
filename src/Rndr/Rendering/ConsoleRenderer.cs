@@ -221,7 +221,7 @@ public sealed class ConsoleRenderer : ITuiRenderer
 
     private void RenderModal(ModalNode node, int leftOffset, int availableWidth)
     {
-        // Modals are rendered like panels with emphasis and centered positioning
+        // Modals are rendered as overlays with emphasis and centered positioning (both horizontal and vertical)
         // Use double-line borders to make them more prominent
         var borderChars = ("╔", "╗", "╚", "╝", "═", "║");
         var (topLeft, topRight, bottomLeft, bottomRight, horizontal, vertical) = borderChars;
@@ -233,8 +233,33 @@ public sealed class ConsoleRenderer : ITuiRenderer
 
         // Determine modal width - use provided width or default to 60% of available width
         var modalWidth = node.Width ?? Math.Max(MinModalWidth, Math.Min(DefaultMinWidth, (int)(availableWidth * DefaultWidthRatio)));
-        var centerOffset = (availableWidth - modalWidth) / 2;
-        var actualLeft = leftOffset + centerOffset;
+        var horizontalCenterOffset = (availableWidth - modalWidth) / 2;
+        var actualLeft = leftOffset + horizontalCenterOffset;
+
+        // First pass: Calculate modal height by rendering to a temporary position
+        var savedCurrentRow = _currentRow;
+        var tempRow = 0;
+        _currentRow = tempRow;
+
+        // Calculate content height
+        var tempContentStart = _currentRow + 1; // +1 for top border
+        _currentRow = tempContentStart;
+        
+        foreach (var child in node.Children)
+        {
+            RenderNode(child, actualLeft + 2, modalWidth - 4);
+        }
+        
+        var contentHeight = _currentRow - tempContentStart;
+        var totalModalHeight = contentHeight + 2; // +2 for top and bottom borders
+
+        // Calculate vertical center position
+        var windowHeight = _console.WindowHeight;
+        var verticalCenterOffset = Math.Max(0, (windowHeight - totalModalHeight) / 2);
+        var modalTopRow = verticalCenterOffset;
+
+        // Restore the current row and render at the centered position
+        _currentRow = modalTopRow;
 
         // Top border with title - truncate title if too long
         var title = node.Title ?? "";
@@ -253,7 +278,7 @@ public sealed class ConsoleRenderer : ITuiRenderer
         // Store starting row for content
         var contentStartRow = _currentRow;
 
-        // Render children
+        // Render children at the centered position
         foreach (var child in node.Children)
         {
             RenderNode(child, actualLeft + 2, modalWidth - 4);
@@ -271,6 +296,9 @@ public sealed class ConsoleRenderer : ITuiRenderer
         var bottomBorder = bottomLeft + new string(horizontal[0], modalWidth - 2) + bottomRight;
         _console.WriteAt(actualLeft, _currentRow, bottomBorder, _theme.AccentColor);
         _currentRow++;
+
+        // Restore original row position so subsequent content doesn't get affected
+        _currentRow = savedCurrentRow;
     }
 
     private void RenderText(TextNode node, int leftOffset, int availableWidth)
