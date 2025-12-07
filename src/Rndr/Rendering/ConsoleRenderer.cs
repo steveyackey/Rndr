@@ -226,13 +226,23 @@ public sealed class ConsoleRenderer : ITuiRenderer
         var borderChars = ("╔", "╗", "╚", "╝", "═", "║");
         var (topLeft, topRight, bottomLeft, bottomRight, horizontal, vertical) = borderChars;
 
+        // Constants for modal sizing
+        const int MinModalWidth = 20;
+        const int DefaultMinWidth = 60;
+        const double DefaultWidthRatio = 0.6;
+
         // Determine modal width - use provided width or default to 60% of available width
-        var modalWidth = node.Width ?? Math.Min(60, (int)(availableWidth * 0.6));
+        var modalWidth = node.Width ?? Math.Max(MinModalWidth, Math.Min(DefaultMinWidth, (int)(availableWidth * DefaultWidthRatio)));
         var centerOffset = (availableWidth - modalWidth) / 2;
         var actualLeft = leftOffset + centerOffset;
 
-        // Top border with title
+        // Top border with title - truncate title if too long
         var title = node.Title ?? "";
+        var maxTitleLength = modalWidth - 4; // Reserve space for borders and padding
+        if (title.Length > maxTitleLength)
+        {
+            title = title.Substring(0, maxTitleLength - 3) + "...";
+        }
         var titleDisplay = string.IsNullOrEmpty(title) ? "" : $" {title} ";
         var topBorderLength = modalWidth - 2 - titleDisplay.Length;
         var topBorder = topLeft + titleDisplay + new string(horizontal[0], Math.Max(0, topBorderLength)) + topRight;
