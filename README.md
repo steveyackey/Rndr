@@ -1,68 +1,62 @@
 # Rndr
 
-A modern TUI (Terminal User Interface) framework for .NET that combines ASP.NET Minimal API patterns with Vue-like single-file components.
+A modern TUI (Terminal User Interface) framework for .NET with minimal-API ergonomics, a source generator for `.tui` single-file components, and built-in reactive state, navigation, theming, and testing tools.
 
 ## Features
 
-- **Minimal API Ergonomics** - Familiar patterns from ASP.NET: `TuiApplication.CreateBuilder()`, `MapView()`, `RunAsync()`
-- **Vue-like Components** - Single-file `.tui` components with markup and `@code` blocks
-- **Reactive State** - Simple `Signal<T>` state management with automatic re-rendering
-- **Navigation Stack** - Built-in navigation with `Navigate()`, `Back()`, and `Replace()`
-- **Beautiful by Default** - Unicode box-drawing, semantic layout primitives, customizable themes
-- **AOT-Compatible** - No reflection, designed for Native AOT compilation
-- **Testable** - Abstract I/O interfaces and `RndrTestHost` for testing without a terminal
+- **.tui single-file components** compiled by `Rndr.Razor` with Razor-style markup and `@code` blocks
+- **Minimal API patterns**: `TuiApplication.CreateBuilder()`, `MapView()`, `RunAsync()`
+- **Reactive signals**: `State()` / `StateGlobal()` for automatic re-rendering
+- **Navigation stack**: `Navigate()`, `Back()`, `Replace()` with global key hooks
+- **Theming + layout primitives**: Unicode box drawing, panels, rows/columns, text input, buttons
+- **Testing-first**: `RndrTestHost` and fake console/input adapters for terminal-less tests
+- **AOT-ready**: no reflection, designed for Native AOT
 
-## Quick Start
+## Quick Start (.tui components)
 
-### Create a Console App
-
+1) Create a console app and add packages
 ```bash
 dotnet new console -n MyTuiApp
 cd MyTuiApp
 dotnet add package Rndr
+dotnet add package Rndr.Razor
 ```
 
-### Write Your First TUI
+2) Add `Pages/Home.tui`
+```razor
+@view
+@using Rndr.Layout
 
+@code {
+    private Signal<int> count = default!;
+    void Increment() => count.Value++;
+    void Decrement() => count.Value--;
+}
+
+<Column Padding="2" Gap="1">
+    <Centered>
+        <Panel Title="Counter">
+            <Column Gap="1">
+                <Text Align="Center" Bold="true" Accent="true">Count: @count.Value</Text>
+                <Row Gap="2" Align="Center">
+                    <Button OnClick="@Decrement">-</Button>
+                    <Button OnClick="@Increment" Primary="true">+</Button>
+                </Row>
+            </Column>
+        </Panel>
+    </Centered>
+</Column>
+```
+
+3) Map the component in `Program.cs`
 ```csharp
 using Rndr;
-using Rndr.Layout;
+using MyTuiApp.Pages;
 
 var app = TuiApplication.CreateBuilder(args).Build();
 
-app.MapView("/", view =>
-{
-    view.Title("My First TUI")
-        .Use((ctx, layout) =>
-        {
-            var count = ctx.State("count", 0);
-
-            layout.Column(col =>
-            {
-                col.Padding(2).Gap(1).AlignCenter();
-
-                col.Panel("Counter", panel =>
-                {
-                    panel.Column(inner =>
-                    {
-                        inner.Text($"Count: {count.Value}", s =>
-                        {
-                            s.Bold = true;
-                            s.Accent = true;
-                        });
-
-                        inner.Row(row =>
-                        {
-                            row.Gap(2);
-                            row.Button("-", () => count.Value--);
-                            row.Button("+", () => count.Value++);
-                        });
-                    });
-                });
-            });
-        });
-})
-.OnGlobalKey((key, ctx) =>
+app.MapView("/", typeof(Home));
+app.OnGlobalKey((key, ctx) =>
 {
     if (key.KeyChar is 'q' or 'Q')
     {
@@ -75,13 +69,40 @@ app.MapView("/", view =>
 await app.RunAsync();
 ```
 
-### Run Your App
-
+4) Run it
 ```bash
 dotnet run
 ```
+Use Tab to move focus, Enter/Space to click, and Q to quit.
 
-Use **Tab** to navigate between buttons, **Enter** to click, and **Q** to quit.
+### Prefer code-only layouts?
+`.tui` files are optional—you can keep everything in C#:
+```csharp
+app.MapView("/", view =>
+{
+    view.Title("Counter").Use((ctx, layout) =>
+    {
+        var count = ctx.State("count", 0);
+        layout.Column(col =>
+        {
+            col.Padding(2).Gap(1).AlignCenter();
+            col.Panel("Counter", panel =>
+            {
+                panel.Column(inner =>
+                {
+                    inner.Text($"Count: {count.Value}", s => { s.Bold = true; s.Accent = true; });
+                    inner.Row(row =>
+                    {
+                        row.Gap(2);
+                        row.Button("-", () => count.Value--);
+                        row.Button("+", () => count.Value++);
+                    });
+                });
+            });
+        });
+    });
+});
+```
 
 ## Layout Primitives
 
@@ -100,13 +121,13 @@ Use **Tab** to navigate between buttons, **Enter** to click, and **Q** to quit.
 
 ```csharp
 // Register multiple views
-app.MapView("/", view => { /* home */ });
-app.MapView("/settings", view => { /* settings */ });
+app.MapView("/", typeof(Home));
+app.MapView("/settings", typeof(Settings));
 
 // Navigate from within a view
-ctx.Navigation.Navigate("/settings");  // Push
-ctx.Navigation.Back();                  // Pop
-ctx.Navigation.Replace("/other");       // Replace current
+Context.Navigation.Navigate("/settings");  // Push
+Context.Navigation.Back();                 // Pop
+Context.Navigation.Replace("/other");      // Replace current
 
 // Global navigation keys
 app.OnGlobalKey((key, ctx) =>
@@ -143,8 +164,7 @@ builder.Services.AddRndrTheme(theme =>
 
 ## Testing
 
-Use `RndrTestHost` to test components without a terminal:
-
+Test components without a terminal using `RndrTestHost`:
 ```csharp
 using Rndr.Testing;
 using Xunit;
@@ -154,27 +174,14 @@ public class CounterTests
     [Fact]
     public void Counter_Increments_OnClick()
     {
-        // Build the view
-        var (nodes, context) = RndrTestHost.BuildView(view =>
-        {
-            view.Use((ctx, layout) =>
-            {
-                var count = ctx.State("count", 0);
-                layout.Column(col =>
-                {
-                    col.Text($"Count: {count.Value}");
-                    col.Button("+", () => count.Value++);
-                });
-            });
-        });
-
-        // Find and click the button
+        var (nodes, context) = RndrTestHost.BuildComponent<Home>(); // generated from Home.tui
         var button = nodes.FindButton("+");
+
         button?.OnClick?.Invoke();
 
-        // Verify state changed
-        var text = nodes.FindText("Count:");
-        Assert.Contains("0", text!.Content);  // Original render
+        var (updated, _) = RndrTestHost.BuildComponent<Home>(stateStore: context.StateStore);
+        var text = updated.FindText("Count:");
+        Assert.Contains("1", text!.Content);
     }
 }
 ```
@@ -183,14 +190,18 @@ public class CounterTests
 
 ```
 src/
-├── Rndr/                    # Core framework library
-├── Rndr.Razor/              # Razor/.tui file integration
-├── Rndr.Testing/            # Test helpers
-└── Rndr.Samples.MyFocusTui/ # Sample application
+├── Rndr/             # Core framework library
+├── Rndr.Razor/       # .tui source generator and build targets
+├── Rndr.Testing/     # Test host and fakes
+
+examples/
+└── MyFocusTui/       # Sample app built with .tui components
 
 tests/
-├── Rndr.Tests/              # Unit tests
-└── Rndr.Razor.Tests/        # Razor integration tests
+├── Rndr.Tests/       # Framework unit tests
+└── Rndr.Razor.Tests/ # Generator/parsing tests
+
+specs/                # Design docs and plans
 ```
 
 ## Keyboard Shortcuts
