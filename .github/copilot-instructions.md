@@ -81,7 +81,7 @@ Review your changes against each principle and document compliance:
 - [ ] Is reflection avoided in core runtime paths?
 - [ ] Do `.tui` files compile to plain C# classes?
 - [ ] Are service registrations explicit?
-- [ ] Test: Does `dotnet publish -c Release` with AOT produce no trim warnings?
+- [ ] Test: Does `dotnet publish -c Release --self-contained -r <runtime> -p:PublishAot=true` produce no trim warnings?
 - [ ] If violated, is there explicit justification?
 
 #### ✓ V. Testability First
@@ -123,7 +123,7 @@ Before committing, verify:
 - [ ] `dotnet build` succeeds with no warnings (TreatWarningsAsErrors)
 - [ ] All tests pass
 - [ ] Code is formatted per `.editorconfig` rules
-- [ ] `dotnet publish -c Release` with AOT produces no trim warnings (if AOT-related changes)
+- [ ] `dotnet publish -c Release --self-contained -r <runtime> -p:PublishAot=true` produces no trim warnings (if AOT-related changes)
 
 ### Commit Message Format
 
@@ -134,6 +134,14 @@ Use the following format:
 Types: feat, fix, refactor, test, docs, chore
 Scopes: core, layout, render, input, nav, razor, samples
 ```
+
+Examples:
+- `feat(layout): add flexbox-like justify-content support`
+- `fix(render): correct panel border rendering on narrow terminals`
+- `refactor(core): simplify signal update propagation logic`
+- `test(nav): add integration tests for navigation stack`
+- `docs(readme): update quick start guide with new syntax`
+- `chore(build): update .NET SDK to 8.0.400`
 
 ## Handling Constitution Violations
 
