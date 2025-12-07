@@ -225,5 +225,16 @@ MIT
 
 ## Contributing
 
-Contributions are welcome! Please read the specification docs in `specs/` before submitting PRs.
+Contributions are welcome! Before submitting PRs:
+
+1. **Read the Constitution**: Review `.specify/memory/constitution.md` to understand the project's core principles and technical constraints.
+2. **Review Copilot Instructions**: If using GitHub Copilot, see `.github/copilot-instructions.md` for development guidelines that ensure changes align with the constitution.
+3. **Follow Spec Kit Workflow**: When possible, use the spec kit commands (`/speckit.specify`, `/speckit.plan`, `/speckit.implement`) which have built-in constitutional compliance checks.
+4. **Read Specification Docs**: Review relevant docs in `specs/` for feature context.
+
+All changes must align with the constitutional principles, especially:
+- Minimal API Ergonomics (ASP.NET Minimal API patterns)
+- Vue-like Component Model (.tui single-file components)
+- AOT-Friendly by Design (no reflection in core paths)
+- Testability First (abstracted I/O, pure Build() methods)
 
