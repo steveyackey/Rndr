@@ -13,9 +13,10 @@ public class ViewContextValidationTests
     {
         // Arrange
         var context = CreateViewContext();
+        string? nullKey = null;
 
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => context.State<int>(null!, 0));
+        Assert.Throws<ArgumentException>(() => context.State(nullKey!, 0));
     }
 
     [Fact]
@@ -43,9 +44,10 @@ public class ViewContextValidationTests
     {
         // Arrange
         var context = CreateViewContext();
+        string? nullKey = null;
 
         // Act & Assert
-        Assert.Throws<ArgumentException>(() => context.StateGlobal<int>(null!, 0));
+        Assert.Throws<ArgumentException>(() => context.StateGlobal(nullKey!, 0));
     }
 
     [Fact]

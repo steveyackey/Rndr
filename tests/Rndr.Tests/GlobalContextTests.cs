@@ -47,6 +47,52 @@ public class GlobalContextTests
         Assert.Equal(100, state2.Value);
     }
 
+    [Fact]
+    public void StateGlobal_ThrowsWhenKeyIsNull()
+    {
+        // Arrange
+        var builder = TuiApplication.CreateBuilder(Array.Empty<string>());
+        var app = builder.Build();
+        
+        var navigationState = new TestNavigationState();
+        var navigationContext = new Navigation.NavigationContext(navigationState);
+        var globalContext = new GlobalContext(navigationContext, app);
+        string? nullKey = null;
+
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => globalContext.StateGlobal(nullKey!, 0));
+    }
+
+    [Fact]
+    public void StateGlobal_ThrowsWhenKeyIsEmpty()
+    {
+        // Arrange
+        var builder = TuiApplication.CreateBuilder(Array.Empty<string>());
+        var app = builder.Build();
+        
+        var navigationState = new TestNavigationState();
+        var navigationContext = new Navigation.NavigationContext(navigationState);
+        var globalContext = new GlobalContext(navigationContext, app);
+
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => globalContext.StateGlobal("", 0));
+    }
+
+    [Fact]
+    public void StateGlobal_ThrowsWhenKeyIsWhitespace()
+    {
+        // Arrange
+        var builder = TuiApplication.CreateBuilder(Array.Empty<string>());
+        var app = builder.Build();
+        
+        var navigationState = new TestNavigationState();
+        var navigationContext = new Navigation.NavigationContext(navigationState);
+        var globalContext = new GlobalContext(navigationContext, app);
+
+        // Act & Assert
+        Assert.Throws<ArgumentException>(() => globalContext.StateGlobal("   ", 0));
+    }
+
     private sealed class TestNavigationState : Navigation.INavigationState
     {
         public string CurrentRoute => "/";
