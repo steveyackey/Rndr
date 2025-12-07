@@ -22,5 +22,11 @@ public sealed class RndrOptions
     /// Default: 16 (~60fps)
     /// </summary>
     public int IdleFrameDelay { get; set; } = 16;
+
+    /// <summary>
+    /// Gets or sets the timeout for async component lifecycle methods.
+    /// Default: 30 seconds
+    /// </summary>
+    public TimeSpan AsyncTimeout { get; set; } = TimeSpan.FromSeconds(30);
 }
 
