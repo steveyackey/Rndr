@@ -43,6 +43,11 @@ public enum NodeKind
     /// <summary>
     /// Centers its content horizontally and vertically.
     /// </summary>
-    Centered
+    Centered,
+
+    /// <summary>
+    /// Modal overlay dialog element.
+    /// </summary>
+    Modal
 }
 

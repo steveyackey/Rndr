@@ -111,11 +111,43 @@ app.MapView("/", view =>
 | `Column` | Vertical stack of children |
 | `Row` | Horizontal arrangement of children |
 | `Panel` | Bordered container with title |
+| `Modal` | Overlay dialog with emphasis |
 | `Text` | Text display with optional styling |
 | `Button` | Clickable button with label |
 | `Spacer` | Flexible space between elements |
 | `Centered` | Centers its content |
 | `TextInput` | Text entry field |
+
+### Using Modals
+
+Modals are overlay dialogs that appear centered on top of other content with double-line borders for emphasis:
+
+```csharp
+// In C# code
+layout.Modal("Confirm Delete", modal =>
+{
+    modal.Column(col =>
+    {
+        col.Text("Are you sure you want to delete this item?");
+        col.Row(row =>
+        {
+            row.Button("Cancel", () => CloseModal());
+            row.Button("Delete", () => DeleteAndClose());
+        });
+    });
+});
+
+// In .tui files
+<Modal Title="Confirm Delete">
+    <Column Gap="1" Padding="1">
+        <Text>Are you sure you want to delete this item?</Text>
+        <Row Gap="2">
+            <Button OnClick="@CloseModal">Cancel</Button>
+            <Button OnClick="@DeleteAndClose">Delete</Button>
+        </Row>
+    </Column>
+</Modal>
+```
 
 ## Navigation
 

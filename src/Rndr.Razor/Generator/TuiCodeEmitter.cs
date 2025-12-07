@@ -252,6 +252,9 @@ public sealed class TuiCodeEmitter
             case "Panel":
                 EmitPanelTag(node);
                 break;
+            case "Modal":
+                EmitModalTag(node);
+                break;
             case "Centered":
                 EmitCenteredTag(node);
                 break;
@@ -310,6 +313,32 @@ public sealed class TuiCodeEmitter
         _context.Indent();
 
         // Panel takes a LayoutBuilder - emit children directly
+        // The children can be Column, Row, etc.
+        var previousBuilder = _context.CurrentBuilder;
+        _context.CurrentBuilder = innerVar;
+
+        foreach (var child in node.Children)
+        {
+            EmitNode(child);
+        }
+
+        _context.CurrentBuilder = previousBuilder;
+        _context.Dedent();
+        _sb.AppendLine($"{_context.GetIndent()}}});");
+    }
+
+    private void EmitModalTag(TuiMarkupNode node)
+    {
+        var builder = _context.CurrentBuilder;
+        var title = GetAttributeValue(node, "Title", "\"\"");
+        var innerVar = _context.GetNextVariable("modal");
+
+        _sb.AppendLine($"{_context.GetIndent()}{builder}.Modal({title}, {innerVar} =>");
+        _sb.AppendLine($"{_context.GetIndent()}{{");
+
+        _context.Indent();
+
+        // Modal takes a LayoutBuilder - emit children directly
         // The children can be Column, Row, etc.
         var previousBuilder = _context.CurrentBuilder;
         _context.CurrentBuilder = innerVar;

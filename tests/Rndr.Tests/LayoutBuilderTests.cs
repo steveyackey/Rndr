@@ -309,5 +309,90 @@ public class LayoutBuilderTests
         // Assert
         Assert.Equal(3, nodes.Count);
     }
+
+    [Fact]
+    public void Modal_CreatesModalNode()
+    {
+        // Arrange
+        var builder = new LayoutBuilder();
+
+        // Act
+        builder.Modal("Confirm", _ => { });
+        var nodes = builder.Build();
+
+        // Assert
+        Assert.Single(nodes);
+        var modal = Assert.IsType<ModalNode>(nodes[0]);
+        Assert.Equal("Confirm", modal.Title);
+    }
+
+    [Fact]
+    public void Column_WithModal_AddsModalChild()
+    {
+        // Arrange
+        var builder = new LayoutBuilder();
+
+        // Act
+        builder.Column(col =>
+        {
+            col.Modal("Delete Confirmation", modal =>
+            {
+                modal.Column(c => c.Text("Are you sure?"));
+            });
+        });
+        var nodes = builder.Build();
+
+        // Assert
+        var column = Assert.IsType<ColumnNode>(nodes[0]);
+        var modal = Assert.IsType<ModalNode>(column.Children[0]);
+        Assert.Equal("Delete Confirmation", modal.Title);
+        Assert.Single(modal.Children);
+    }
+
+    [Fact]
+    public void Modal_WithContent_AddsChildren()
+    {
+        // Arrange
+        var builder = new LayoutBuilder();
+
+        // Act
+        builder.Modal("Test Modal", modal =>
+        {
+            modal.Column(col =>
+            {
+                col.Text("Modal content");
+                col.Button("Close", null);
+            });
+        });
+        var nodes = builder.Build();
+
+        // Assert
+        var modal = Assert.IsType<ModalNode>(nodes[0]);
+        Assert.Equal("Test Modal", modal.Title);
+        var column = Assert.IsType<ColumnNode>(modal.Children[0]);
+        Assert.Equal(2, column.Children.Count);
+    }
+
+    [Fact]
+    public void Row_WithModal_AddsModalChild()
+    {
+        // Arrange
+        var builder = new LayoutBuilder();
+
+        // Act
+        builder.Row(row =>
+        {
+            row.Modal("Alert", modal =>
+            {
+                modal.Column(c => c.Text("Alert message"));
+            });
+        });
+        var nodes = builder.Build();
+
+        // Assert
+        var row = Assert.IsType<RowNode>(nodes[0]);
+        var modal = Assert.IsType<ModalNode>(row.Children[0]);
+        Assert.Equal("Alert", modal.Title);
+    }
 }
 

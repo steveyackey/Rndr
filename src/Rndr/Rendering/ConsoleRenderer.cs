@@ -71,6 +71,9 @@ public sealed class ConsoleRenderer : ITuiRenderer
             case NodeKind.Panel:
                 RenderPanel((PanelNode)node, leftOffset, availableWidth);
                 break;
+            case NodeKind.Modal:
+                RenderModal((ModalNode)node, leftOffset, availableWidth);
+                break;
             case NodeKind.Text:
                 RenderText((TextNode)node, leftOffset, availableWidth);
                 break;
@@ -213,6 +216,50 @@ public sealed class ConsoleRenderer : ITuiRenderer
         // Bottom border
         var bottomBorder = bottomLeft + new string(horizontal[0], availableWidth - 2) + bottomRight;
         _console.WriteAt(leftOffset, _currentRow, bottomBorder, _theme.TextColor);
+        _currentRow++;
+    }
+
+    private void RenderModal(ModalNode node, int leftOffset, int availableWidth)
+    {
+        // Modals are rendered like panels with emphasis and centered positioning
+        // Use double-line borders to make them more prominent
+        var borderChars = ("╔", "╗", "╚", "╝", "═", "║");
+        var (topLeft, topRight, bottomLeft, bottomRight, horizontal, vertical) = borderChars;
+
+        // Determine modal width - use provided width or default to 60% of available width
+        var modalWidth = node.Width ?? Math.Min(60, (int)(availableWidth * 0.6));
+        var centerOffset = (availableWidth - modalWidth) / 2;
+        var actualLeft = leftOffset + centerOffset;
+
+        // Top border with title
+        var title = node.Title ?? "";
+        var titleDisplay = string.IsNullOrEmpty(title) ? "" : $" {title} ";
+        var topBorderLength = modalWidth - 2 - titleDisplay.Length;
+        var topBorder = topLeft + titleDisplay + new string(horizontal[0], Math.Max(0, topBorderLength)) + topRight;
+
+        _console.WriteAt(actualLeft, _currentRow, topBorder, _theme.AccentColor);
+        _currentRow++;
+
+        // Store starting row for content
+        var contentStartRow = _currentRow;
+
+        // Render children
+        foreach (var child in node.Children)
+        {
+            RenderNode(child, actualLeft + 2, modalWidth - 4);
+        }
+
+        // Add vertical borders for each content row
+        var contentEndRow = _currentRow;
+        for (var row = contentStartRow; row < contentEndRow; row++)
+        {
+            _console.WriteAt(actualLeft, row, vertical, _theme.AccentColor);
+            _console.WriteAt(actualLeft + modalWidth - 1, row, vertical, _theme.AccentColor);
+        }
+
+        // Bottom border
+        var bottomBorder = bottomLeft + new string(horizontal[0], modalWidth - 2) + bottomRight;
+        _console.WriteAt(actualLeft, _currentRow, bottomBorder, _theme.AccentColor);
         _currentRow++;
     }
 
