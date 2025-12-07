@@ -1,0 +1,120 @@
+@view
+@using Spectre.Console
+
+<Column Padding="2" Gap="1">
+    <Text Bold="true" Accent="true">🎨 Using Spectre.Console in .tui Files</Text>
+    <Text Faint="true">This example shows how to integrate Spectre.Console with Rndr</Text>
+
+    <Panel Title="Color Examples">
+        <Column Padding="1" Gap="1">
+            <Text>@GetColoredText()</Text>
+            <Text>@GetMarkupText()</Text>
+        </Column>
+    </Panel>
+
+    <Panel Title="Table Example">
+        <Column Padding="1">
+            <Text>@GetTableText()</Text>
+        </Column>
+    </Panel>
+
+    <Panel Title="Bar Chart">
+        <Column Padding="1">
+            <Text>@GetBarChartText()</Text>
+        </Column>
+    </Panel>
+
+    <Panel Title="Interactive Counter">
+        <Column Padding="1" Gap="1">
+            <Text>Count: @count.Value</Text>
+            <Row Gap="2">
+                <Button OnClick="@Decrement">-</Button>
+                <Button OnClick="@Increment" Primary="true">+</Button>
+                <Button OnClick="@Reset">Reset</Button>
+            </Row>
+            <Text>@GetProgressBar()</Text>
+        </Column>
+    </Panel>
+
+    <Spacer />
+    <Text Faint="true">[Q] Quit  [Tab] Navigate  [Enter/Space] Click Button</Text>
+</Column>
+
+@code {
+    private Signal<int> count = default!;
+
+    protected override void OnInit()
+    {
+        count = State("count", 0);
+    }
+
+    void Increment()
+    {
+        count.Value++;
+    }
+
+    void Decrement()
+    {
+        if (count.Value > 0)
+        {
+            count.Value--;
+        }
+    }
+
+    void Reset()
+    {
+        count.Value = 0;
+    }
+
+    string GetColoredText()
+    {
+        // Demonstrate Spectre.Console markup rendering
+        return Markup.Remove("[green]Green text[/] and [red]red text[/] and [blue]blue text[/]");
+    }
+
+    string GetMarkupText()
+    {
+        // Show escaped markup
+        return Markup.Remove("[bold yellow]Bold yellow text[/] with [italic]italic[/]");
+    }
+
+    string GetTableText()
+    {
+        // Create a simple representation of table data
+        // In a real scenario, you might render this differently
+        return string.Join("\n",
+            "┌──────────┬─────────┐",
+            "│ Name     │ Score   │",
+            "├──────────┼─────────┤",
+            "│ Alice    │ 95      │",
+            "│ Bob      │ 87      │",
+            "│ Charlie  │ 92      │",
+            "└──────────┴─────────┘"
+        );
+    }
+
+    string GetBarChartText()
+    {
+        // Simple ASCII bar chart
+        var data = new[] { ("Apple", 23), ("Banana", 15), ("Cherry", 31), ("Date", 8) };
+        var lines = new List<string>();
+        
+        foreach (var (name, value) in data)
+        {
+            var bar = new string('█', value / 2);
+            lines.Add($"{name,-10} {bar} {value}");
+        }
+        
+        return string.Join("\n", lines);
+    }
+
+    string GetProgressBar()
+    {
+        // Create a simple progress bar based on count
+        var percent = Math.Min(100, count.Value);
+        var filled = percent / 5;
+        var empty = 20 - filled;
+        var bar = new string('█', filled) + new string('░', empty);
+        return $"Progress: [{bar}] {percent}%";
+    }
+}

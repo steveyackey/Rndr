@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -18,6 +18,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rndr.Tests", "tests\Rndr.Tests\Rndr.Tests.csproj", "{E5F67890-1234-5678-90AB-CDEF12345678}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rndr.Razor.Tests", "tests\Rndr.Razor.Tests\Rndr.Razor.Tests.csproj", "{F6789012-3456-7890-ABCD-EF1234567890}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{A94D0DC3-B62F-4AC0-94A4-6C8258C92D31}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UsingSpectre", "examples\UsingSpectre\UsingSpectre.csproj", "{6BC7BA39-02D1-46B3-98B1-958FBA7514BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -49,6 +53,10 @@ Global
 		{F6789012-3456-7890-ABCD-EF1234567890}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F6789012-3456-7890-ABCD-EF1234567890}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F6789012-3456-7890-ABCD-EF1234567890}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BC7BA39-02D1-46B3-98B1-958FBA7514BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BC7BA39-02D1-46B3-98B1-958FBA7514BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BC7BA39-02D1-46B3-98B1-958FBA7514BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BC7BA39-02D1-46B3-98B1-958FBA7514BA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{A1B2C3D4-E5F6-7890-1234-567890ABCDEF} = {E9A8AACE-8C4B-4C5C-9D3B-1D2F3B4E5F6A}
@@ -57,6 +65,6 @@ Global
 		{D4E5F678-9012-3456-7890-ABCDEF123456} = {E9A8AACE-8C4B-4C5C-9D3B-1D2F3B4E5F6A}
 		{E5F67890-1234-5678-90AB-CDEF12345678} = {F1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890}
 		{F6789012-3456-7890-ABCD-EF1234567890} = {F1B2C3D4-E5F6-7890-A1B2-C3D4E5F67890}
+		{6BC7BA39-02D1-46B3-98B1-958FBA7514BA} = {A94D0DC3-B62F-4AC0-94A4-6C8258C92D31}
 	EndGlobalSection
 EndGlobal
-

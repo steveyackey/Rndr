@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>UsingSpectre</RootNamespace>
+    <AssemblyName>UsingSpectre</AssemblyName>
+    <IsPackable>false</IsPackable>
+    <!-- Save generated sources for inspection -->
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)Generated</CompilerGeneratedFilesOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Rndr\Rndr.csproj" />
+    <!-- Reference as analyzer for source generator -->
+    <ProjectReference Include="..\..\src\Rndr.Razor\Rndr.Razor.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
+  </ItemGroup>
+
+  <!-- Include .tui files as AdditionalFiles for source generator -->
+  <ItemGroup>
+    <AdditionalFiles Include="**/*.tui" />
+  </ItemGroup>
+
+  <!-- Add Spectre.Console for this example -->
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console" Version="0.49.1" />
+  </ItemGroup>
+
+</Project>
